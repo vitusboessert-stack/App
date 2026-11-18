@@ -1,0 +1,6 @@
+{
+  "name": "ARCANA — Pixel RPG Habit Tracker",
+  "description": "An offline Terraria-inspired pixel RPG habit tracker where daily habits fuel hero gear, boss battles, companions, and your guild city.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
