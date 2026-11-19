@@ -70,232 +70,361 @@ export function buildBossSprite(index: number): { width: number; height: number;
   return { width: 64, height: 48, rects: g.toSvgRects() };
 }
 
-export function buildPetSprite(pet: Pick<OwnedPet, 'sprite' | 'color'>): {
+export function buildPetSprite(pet: Pick<OwnedPet, 'sprite' | 'color'> & { level?: number }): {
   width: number;
   height: number;
   rects: string;
   blinkRects: string;
 } {
-  // High-detail 24x24 pixel pet matching 48x64 Hero pixel density
+  // Hand-crafted 24x24 pixel companions with multi-tone shading & evolution accents
   const g = new PixelGrid(24, 24);
   const blink = new PixelGrid(24, 24);
   const base = pet.color || '#77d3ad';
-  const light = mixHex(base, '#ffffff', 0.3);
+  const light = mixHex(base, '#ffffff', 0.36);
+  const highlight = mixHex(base, '#ffffff', 0.62);
   const dark = shadeHex(base, 0.72);
-  const lid = shadeHex(base, 0.85);
+  const deep = shadeHex(base, 0.54);
+  const lid = shadeHex(base, 0.84);
+  const level = pet.level || 1;
 
   if (pet.sprite === 'slime') {
-    g.ellipse(12, 16, 8, 6, base);
-    g.ellipse(10, 13, 4, 3, light);
-    g.box(6, 19, 12, 3, dark);
-    g.box(11, 7, 2, 3, '#568f4d');
-    g.box(9, 6, 2, 2, '#8ce079');
-    g.box(13, 7, 2, 2, '#73c462');
-    g.box(8, 14, 2, 3, SPRITE_INK);
-    g.box(14, 14, 2, 3, SPRITE_INK);
-    g.set(8, 14, '#ffffff');
-    g.set(14, 14, '#ffffff');
+    // Sprout Slime: glossy dome, rosy cheeks, curling 2-leaf sprout & dewdrop
+    g.box(11, 5, 2, 4, '#548c46');
+    g.box(8, 4, 3, 2, '#78cf61');
+    g.set(7, 5, '#5ca849');
+    g.box(13, 5, 3, 2, '#8ee677');
+    g.set(14, 4, '#c7ffba');
+    g.ellipse(12, 15, 8, 6, base);
+    g.box(6, 18, 12, 3, dark);
+    g.box(8, 20, 8, 1, deep);
+    g.ellipse(12, 13, 6, 4, base);
+    g.box(8, 10, 4, 2, light);
+    g.set(8, 10, highlight);
+    g.set(10, 11, light);
+    g.box(6, 16, 2, 1, '#f49ac1');
+    g.box(16, 16, 2, 1, '#f49ac1');
+    g.box(8, 13, 2, 3, SPRITE_INK);
+    g.box(14, 13, 2, 3, SPRITE_INK);
+    g.set(8, 13, '#ffffff');
+    g.set(14, 13, '#ffffff');
     blink.box(8, 14, 2, 2, lid);
     blink.box(14, 14, 2, 2, lid);
   } else if (pet.sprite === 'crab') {
-    // Pebble Crab with claws & shell highlights
-    g.box(4, 10, 3, 4, light);
-    g.box(17, 10, 3, 4, light);
-    g.set(5, 9, base);
-    g.set(18, 9, base);
-    g.ellipse(12, 16, 7, 4, base);
-    g.ellipse(10, 14, 4, 2, light);
-    g.box(8, 18, 8, 2, dark);
-    g.box(5, 19, 2, 3, dark);
-    g.box(17, 19, 2, 3, dark);
-    g.box(9, 13, 2, 2, SPRITE_INK);
-    g.box(13, 13, 2, 2, SPRITE_INK);
-    g.set(9, 13, '#ffffff');
-    g.set(13, 13, '#ffffff');
-    blink.box(9, 13, 2, 1, lid);
-    blink.box(13, 13, 2, 1, lid);
+    // Pebble Crab: raised articulated claws, spotted shell & eyestalks
+    g.box(4, 7, 3, 4, base);
+    g.box(4, 7, 1, 2, light);
+    g.set(6, 7, highlight);
+    g.box(5, 11, 2, 2, dark);
+    g.box(17, 7, 3, 4, base);
+    g.box(19, 7, 1, 2, light);
+    g.set(17, 7, highlight);
+    g.box(17, 11, 2, 2, dark);
+    g.box(9, 10, 1, 2, dark);
+    g.box(14, 10, 1, 2, dark);
+    g.ellipse(12, 15, 6, 4, base);
+    g.ellipse(11, 13, 4, 2, light);
+    g.set(10, 13, highlight);
+    g.set(14, 14, dark);
+    g.box(7, 17, 10, 2, dark);
+    g.box(9, 16, 6, 2, '#f5d7c4');
+    g.box(5, 18, 2, 3, deep);
+    g.box(8, 19, 2, 2, deep);
+    g.box(14, 19, 2, 2, deep);
+    g.box(17, 18, 2, 3, deep);
+    g.box(9, 11, 2, 2, SPRITE_INK);
+    g.box(13, 11, 2, 2, SPRITE_INK);
+    g.set(9, 11, '#ffffff');
+    g.set(13, 11, '#ffffff');
+    blink.box(9, 11, 2, 1, lid);
+    blink.box(13, 11, 2, 1, lid);
   } else if (pet.sprite === 'squirrel') {
-    // Acorn Squirrel with fluffy curl tail
-    g.ellipse(18, 13, 4, 6, light);
-    g.ellipse(17, 15, 3, 4, base);
-    g.ellipse(10, 17, 4, 4, base);
-    g.ellipse(10, 11, 4, 4, base);
-    g.box(7, 6, 2, 3, dark);
-    g.box(11, 6, 2, 3, dark);
-    g.box(8, 12, 4, 2, '#f5e1c8');
-    g.box(7, 10, 2, 2, SPRITE_INK);
-    g.set(7, 10, '#ffffff');
-    g.box(8, 20, 4, 2, dark);
-    blink.box(7, 10, 2, 1, lid);
+    // Acorn Squirrel: curled striped tail, tufted ears & golden acorn
+    g.ellipse(17, 13, 4, 6, light);
+    g.ellipse(17, 14, 3, 4, base);
+    g.box(16, 10, 3, 2, dark);
+    g.box(17, 17, 3, 2, dark);
+    g.ellipse(10, 16, 4, 4, base);
+    g.box(8, 15, 3, 4, '#f7e5cf');
+    g.ellipse(10, 10, 4, 4, base);
+    g.box(7, 5, 2, 3, dark);
+    g.box(11, 5, 2, 3, dark);
+    g.set(7, 5, light);
+    g.set(11, 5, light);
+    g.box(6, 11, 3, 2, '#f7e5cf');
+    g.set(6, 11, '#f28b9c');
+    g.box(8, 9, 2, 2, SPRITE_INK);
+    g.set(8, 9, '#ffffff');
+    // Tiny acorn held in front paws
+    g.box(4, 15, 3, 2, '#7d4e2d');
+    g.box(4, 17, 3, 2, '#d9a452');
+    g.set(5, 17, '#ffe299');
+    g.box(8, 20, 4, 2, deep);
+    blink.box(8, 9, 2, 1, lid);
   } else if (pet.sprite === 'frog') {
-    // Dewdrop Frog with bright crest & plump body
+    // Dewdrop Frog: golden-ringed eyes, lily belly & crown water droplet
     g.ellipse(12, 16, 7, 5, base);
-    g.ellipse(12, 17, 4, 3, '#d7f7c8');
+    g.ellipse(12, 17, 4, 3, '#dcfad2');
+    g.box(7, 19, 10, 2, dark);
     g.ellipse(8, 10, 3, 3, light);
     g.ellipse(16, 10, 3, 3, light);
+    g.box(11, 7, 2, 3, '#7be0ff');
+    g.set(11, 7, '#e0f9ff');
+    g.box(7, 9, 3, 3, '#f7d96f');
+    g.box(14, 9, 3, 3, '#f7d96f');
     g.box(8, 9, 2, 2, SPRITE_INK);
     g.box(15, 9, 2, 2, SPRITE_INK);
     g.set(8, 9, '#ffffff');
     g.set(15, 9, '#ffffff');
-    g.box(6, 20, 3, 2, dark);
-    g.box(15, 20, 3, 2, dark);
-    blink.box(8, 9, 2, 1, light);
-    blink.box(15, 9, 2, 1, light);
+    g.box(6, 13, 2, 1, '#f49ac1');
+    g.box(16, 13, 2, 1, '#f49ac1');
+    g.box(10, 14, 4, 1, deep);
+    g.box(5, 20, 4, 2, deep);
+    g.box(15, 20, 4, 2, deep);
+    blink.box(8, 10, 2, 1, light);
+    blink.box(15, 10, 2, 1, light);
   } else if (pet.sprite === 'fox') {
-    // Detailed Moon Fox with fluffy tipped tail & paws
-    g.ellipse(18, 16, 4, 3, light);
-    g.ellipse(20, 15, 2, 2, '#ffffff');
-    g.ellipse(11, 17, 5, 4, base);
-    g.ellipse(11, 11, 5, 4, base);
-    g.poly([[6, 9], [7, 4], [10, 8]], dark);
-    g.poly([[16, 9], [15, 4], [12, 8]], dark);
-    g.set(8, 6, '#f7cde0');
-    g.set(14, 6, '#f7cde0');
-    g.box(8, 12, 6, 2, '#fff0f5');
+    // Moon Fox: crescent brow gem, plush neck ruff & white-tipped brush tail
+    g.ellipse(18, 15, 4, 3, base);
+    g.ellipse(19, 14, 2, 2, light);
+    g.box(19, 13, 3, 3, '#ffffff');
+    g.ellipse(11, 16, 4, 4, base);
+    g.box(9, 14, 4, 4, '#fff2fa');
+    g.ellipse(11, 10, 5, 4, base);
+    g.poly([[6, 8], [7, 3], [10, 7]], deep);
+    g.poly([[16, 8], [15, 3], [12, 7]], deep);
+    g.set(8, 6, '#f9c6df');
+    g.set(14, 6, '#f9c6df');
+    g.box(10, 7, 2, 1, '#ffe680');
+    g.set(11, 8, '#ffe680');
+    g.box(8, 12, 6, 2, '#fff2fa');
+    g.set(11, 12, '#3d2a4d');
     g.box(8, 10, 2, 2, SPRITE_INK);
     g.box(13, 10, 2, 2, SPRITE_INK);
     g.set(8, 10, '#ffffff');
     g.set(13, 10, '#ffffff');
-    g.box(8, 20, 2, 2, dark);
-    g.box(13, 20, 2, 2, dark);
+    g.box(8, 20, 2, 2, deep);
+    g.box(12, 20, 2, 2, deep);
     blink.box(8, 10, 2, 1, lid);
     blink.box(13, 10, 2, 1, lid);
   } else if (pet.sprite === 'tortoise') {
-    // Moss Tortoise with mossy domed shell
-    g.ellipse(12, 15, 7, 5, dark);
-    g.ellipse(12, 14, 6, 4, base);
-    g.box(9, 12, 4, 2, light);
-    g.box(11, 9, 3, 2, '#9ce890');
-    g.box(4, 15, 4, 3, '#88c996');
-    g.set(5, 16, SPRITE_INK);
-    g.box(7, 19, 3, 2, '#5c9169');
-    g.box(14, 19, 3, 2, '#5c9169');
-    blink.set(5, 16, '#88c996');
+    // Moss Tortoise: plated mossy shell, tiny blossom & friendly face
+    g.ellipse(13, 15, 7, 5, deep);
+    g.ellipse(13, 14, 6, 4, base);
+    g.box(10, 12, 2, 2, light);
+    g.box(13, 11, 3, 2, light);
+    g.box(11, 15, 4, 2, dark);
+    g.box(12, 8, 3, 2, '#7fd975');
+    g.set(13, 7, '#ffe082');
+    g.ellipse(6, 15, 3, 3, '#8dd49a');
+    g.box(4, 15, 3, 2, '#a7e8b3');
+    g.box(5, 14, 2, 2, SPRITE_INK);
+    g.set(5, 14, '#ffffff');
+    g.set(4, 17, '#f49ac1');
+    g.box(8, 19, 3, 3, '#5c9169');
+    g.box(15, 19, 3, 3, '#5c9169');
+    blink.box(5, 14, 2, 1, '#8dd49a');
   } else if (pet.sprite === 'moth') {
-    // Lantern Moth with glowing wing eyespots
-    g.ellipse(7, 13, 4, 5, base);
-    g.ellipse(17, 13, 4, 5, base);
-    g.ellipse(7, 12, 2, 2, '#fff6cc');
-    g.ellipse(17, 12, 2, 2, '#fff6cc');
-    g.ellipse(12, 14, 2, 5, '#5e493c');
-    g.box(10, 8, 1, 2, '#ffe082');
-    g.box(13, 8, 1, 2, '#ffe082');
-    blink.ellipse(7, 12, 2, 2, light);
-    blink.ellipse(17, 12, 2, 2, light);
+    // Lantern Moth: scalloped amber wings, glowing lantern spots & plumed antennae
+    g.ellipse(7, 12, 5, 5, base);
+    g.ellipse(17, 12, 5, 5, base);
+    g.ellipse(8, 17, 3, 3, dark);
+    g.ellipse(16, 17, 3, 3, dark);
+    g.box(5, 10, 3, 3, light);
+    g.box(16, 10, 3, 3, light);
+    g.box(6, 11, 2, 2, '#fff9d6');
+    g.box(16, 11, 2, 2, '#fff9d6');
+    g.ellipse(12, 14, 2, 5, '#594235');
+    g.box(10, 9, 4, 2, '#fff0c2');
+    g.box(9, 5, 2, 3, '#ffd56b');
+    g.box(13, 5, 2, 3, '#ffd56b');
+    g.set(8, 5, '#fff3b8');
+    g.set(15, 5, '#fff3b8');
+    g.set(11, 10, '#fff7cc');
+    g.set(13, 10, '#fff7cc');
+    blink.box(6, 11, 2, 2, light);
+    blink.box(16, 11, 2, 2, light);
   } else if (pet.sprite === 'cat') {
-    // Shadow Cat with emerald eyes & curved tail
-    g.poly([[16, 18], [20, 12], [19, 10], [17, 16]], dark);
-    g.ellipse(11, 17, 4, 4, base);
-    g.ellipse(11, 11, 5, 4, base);
-    g.poly([[7, 8], [7, 4], [10, 7]], dark);
-    g.poly([[15, 8], [15, 4], [12, 7]], dark);
-    g.box(8, 10, 2, 2, '#62f5a8');
-    g.box(13, 10, 2, 2, '#62f5a8');
-    g.set(11, 12, '#f5a6c0');
-    g.box(8, 20, 2, 2, dark);
-    g.box(12, 20, 2, 2, dark);
-    blink.box(8, 10, 2, 1, lid);
-    blink.box(13, 10, 2, 1, lid);
+    // Shadow Cat: sleek midnight silhouette, emerald eyes & golden collar bell
+    g.poly([[16, 18], [20, 13], [20, 9], [18, 11], [17, 16]], dark);
+    g.set(20, 9, light);
+    g.ellipse(11, 16, 4, 4, base);
+    g.box(10, 15, 3, 4, light);
+    g.ellipse(11, 10, 5, 4, base);
+    g.poly([[7, 8], [7, 3], [10, 7]], deep);
+    g.poly([[15, 8], [15, 3], [12, 7]], deep);
+    g.set(8, 6, '#e69fc4');
+    g.set(14, 6, '#e69fc4');
+    g.box(8, 14, 6, 1, '#c94c6d');
+    g.box(11, 14, 2, 2, '#ffd56b');
+    g.box(8, 9, 2, 2, '#5cf2a4');
+    g.box(13, 9, 2, 2, '#5cf2a4');
+    g.set(8, 9, '#d8ffea');
+    g.set(13, 9, '#d8ffea');
+    g.set(11, 11, '#f5a6c0');
+    g.box(8, 20, 2, 2, deep);
+    g.box(12, 20, 2, 2, deep);
+    blink.box(8, 9, 2, 1, lid);
+    blink.box(13, 9, 2, 1, lid);
   } else if (pet.sprite === 'owl') {
+    // Rune Owl: ear tufts, glowing brow rune, facial disc & golden talons
     g.ellipse(12, 14, 6, 6, base);
-    g.ellipse(12, 17, 3, 3, '#eef7fa');
-    g.poly([[6, 10], [5, 5], [9, 9]], dark);
-    g.poly([[18, 10], [19, 5], [15, 9]], dark);
+    g.ellipse(12, 17, 4, 3, '#eef7fa');
+    g.set(11, 16, dark);
+    g.set(13, 18, dark);
+    g.box(6, 13, 2, 5, dark);
+    g.box(16, 13, 2, 5, dark);
+    g.poly([[6, 9], [5, 4], [9, 8]], deep);
+    g.poly([[18, 9], [19, 4], [15, 8]], deep);
     g.ellipse(9, 11, 2, 2, '#ffffff');
     g.ellipse(15, 11, 2, 2, '#ffffff');
+    g.box(11, 8, 2, 1, '#9cf5ff');
     g.set(9, 11, SPRITE_INK);
     g.set(15, 11, SPRITE_INK);
-    g.box(11, 13, 2, 2, '#f0be5b');
+    g.set(9, 10, '#fff7cc');
+    g.set(15, 10, '#fff7cc');
+    g.box(11, 12, 2, 2, '#f5be4f');
+    g.box(8, 20, 3, 2, '#e3a842');
+    g.box(13, 20, 3, 2, '#e3a842');
     blink.box(8, 10, 3, 2, lid);
     blink.box(14, 10, 3, 2, lid);
   } else if (pet.sprite === 'bunny') {
-    // Frost Bunny with tall ears & cotton tail
+    // Frost Bunny: tall frost-tipped ears, icy scarf & fluffy cotton tail
     g.box(8, 3, 2, 6, light);
     g.box(13, 3, 2, 6, light);
+    g.box(8, 3, 2, 1, '#ffffff');
+    g.box(13, 3, 2, 1, '#ffffff');
     g.box(9, 4, 1, 4, '#ffd4e5');
     g.box(14, 4, 1, 4, '#ffd4e5');
     g.ellipse(12, 17, 5, 4, base);
-    g.ellipse(11, 11, 4, 4, light);
     g.ellipse(17, 17, 2, 2, '#ffffff');
-    g.box(9, 10, 2, 2, '#4d73b8');
-    g.box(13, 10, 2, 2, '#4d73b8');
+    g.ellipse(11, 11, 4, 4, light);
+    g.box(8, 14, 7, 2, '#6cb8f5');
+    g.box(13, 15, 2, 3, '#4f99db');
+    g.box(9, 10, 2, 2, '#3d66b8');
+    g.box(13, 10, 2, 2, '#3d66b8');
     g.set(9, 10, '#ffffff');
+    g.set(13, 10, '#ffffff');
+    g.set(11, 12, '#ff9ec2');
+    g.box(8, 20, 3, 2, base);
+    g.box(13, 20, 3, 2, base);
     blink.box(9, 10, 2, 1, light);
     blink.box(13, 10, 2, 1, light);
   } else if (pet.sprite === 'beetle') {
-    // Clockwork Beetle with gilded carapace & horn
-    g.box(11, 4, 2, 4, '#f5d47a');
-    g.box(9, 5, 6, 1, '#f5d47a');
+    // Clockwork Beetle: gilded horn, gear flank & glowing cyan optics
+    g.box(11, 3, 2, 5, '#ffd86b');
+    g.box(9, 4, 6, 1, '#ffe9a3');
+    g.box(10, 7, 4, 2, '#c98e32');
     g.ellipse(12, 14, 6, 6, base);
     g.ellipse(10, 12, 3, 3, light);
-    g.box(12, 10, 1, 10, dark);
-    g.box(5, 11, 2, 2, dark);
-    g.box(17, 11, 2, 2, dark);
-    g.box(5, 16, 2, 2, dark);
-    g.box(17, 16, 2, 2, dark);
-    g.set(10, 9, '#72f0ff');
-    g.set(13, 9, '#72f0ff');
-    blink.set(10, 9, '#ffffff');
-    blink.set(13, 9, '#ffffff');
+    g.box(12, 10, 1, 10, deep);
+    g.box(14, 13, 3, 3, '#e8b84b');
+    g.set(15, 14, deep);
+    g.box(4, 11, 2, 2, deep);
+    g.box(18, 11, 2, 2, deep);
+    g.box(4, 16, 2, 2, deep);
+    g.box(18, 16, 2, 2, deep);
+    g.box(9, 9, 2, 2, '#6cf2ff');
+    g.box(13, 9, 2, 2, '#6cf2ff');
+    g.set(9, 9, '#ffffff');
+    g.set(13, 9, '#ffffff');
+    blink.box(9, 9, 2, 1, '#c9faff');
+    blink.box(13, 9, 2, 1, '#c9faff');
   } else if (pet.sprite === 'pup') {
-    g.ellipse(11, 17, 5, 4, base);
-    g.ellipse(11, 11, 5, 4, base);
-    g.box(5, 10, 2, 5, dark);
-    g.box(16, 10, 2, 5, dark);
-    g.poly([[16, 17], [20, 12], [21, 17]], '#ffdc6b');
-    g.box(8, 10, 2, 2, SPRITE_INK);
-    g.box(13, 10, 2, 2, SPRITE_INK);
-    g.set(8, 10, '#ffffff');
-    g.set(13, 10, '#ffffff');
-    blink.box(8, 10, 2, 1, lid);
-    blink.box(13, 10, 2, 1, lid);
+    // Ember Pup: flame-tipped tail & crest, warm chest blaze & floppy ears
+    g.poly([[16, 17], [19, 12], [21, 14], [19, 18]], '#ffcf4d');
+    g.set(20, 11, '#fff3b0');
+    g.ellipse(11, 16, 5, 4, base);
+    g.box(9, 15, 4, 4, '#fff0d4');
+    g.ellipse(11, 10, 5, 4, base);
+    g.box(10, 5, 2, 2, '#ffd15c');
+    g.box(5, 9, 2, 5, deep);
+    g.box(16, 9, 2, 5, deep);
+    g.box(9, 12, 4, 2, '#fff0d4');
+    g.set(11, 12, '#3b2416');
+    g.box(8, 9, 2, 2, SPRITE_INK);
+    g.box(13, 9, 2, 2, SPRITE_INK);
+    g.set(8, 9, '#ffffff');
+    g.set(13, 9, '#ffffff');
+    g.box(8, 20, 2, 2, dark);
+    g.box(13, 20, 2, 2, dark);
+    blink.box(8, 9, 2, 1, lid);
+    blink.box(13, 9, 2, 1, lid);
   } else if (pet.sprite === 'axolotl') {
-    // Abyssal Axolotl with coral gill fronds
-    g.box(4, 9, 2, 5, '#e85a93');
-    g.box(18, 9, 2, 5, '#e85a93');
-    g.set(3, 10, '#ffadd0');
-    g.set(20, 10, '#ffadd0');
+    // Abyssal Axolotl: triple coral gill fronds, tail fin & gentle smile
+    g.box(4, 8, 2, 6, '#e85a93');
+    g.box(18, 8, 2, 6, '#e85a93');
+    g.set(3, 8, '#ffadd0');
+    g.set(3, 11, '#ffadd0');
+    g.set(3, 14, '#ffadd0');
+    g.set(20, 8, '#ffadd0');
+    g.set(20, 11, '#ffadd0');
+    g.set(20, 14, '#ffadd0');
+    g.poly([[16, 17], [21, 14], [21, 19]], light);
     g.ellipse(12, 17, 5, 4, base);
+    g.box(10, 16, 4, 4, '#ffdbe9');
     g.ellipse(12, 11, 5, 4, light);
     g.box(9, 10, 2, 2, SPRITE_INK);
     g.box(14, 10, 2, 2, SPRITE_INK);
     g.set(9, 10, '#ffffff');
     g.set(14, 10, '#ffffff');
-    g.box(11, 13, 3, 1, '#c4527e');
+    g.set(8, 12, '#ff9ec2');
+    g.set(16, 12, '#ff9ec2');
+    g.box(11, 13, 3, 1, '#b84673');
+    g.box(8, 20, 2, 2, dark);
+    g.box(14, 20, 2, 2, dark);
     blink.box(9, 10, 2, 1, light);
     blink.box(14, 10, 2, 1, light);
   } else if (pet.sprite === 'griffin') {
-    // Storm Griffin with silver wings & golden beak
-    g.poly([[6, 14], [2, 8], [6, 18]], '#d7e6ff');
-    g.poly([[18, 14], [22, 8], [18, 18]], '#d7e6ff');
+    // Storm Griffin: layered silver-blue wings, golden beak & swept crest
+    g.poly([[6, 14], [2, 7], [5, 17]], '#c9dcff');
+    g.poly([[18, 14], [22, 7], [19, 17]], '#c9dcff');
+    g.box(3, 9, 2, 4, '#ffffff');
+    g.box(19, 9, 2, 4, '#ffffff');
     g.ellipse(12, 17, 5, 4, base);
+    g.box(10, 14, 4, 4, '#eef4ff');
     g.ellipse(12, 11, 4, 4, '#eef4ff');
-    g.box(11, 11, 2, 2, '#f2c14e');
+    g.box(9, 6, 2, 2, '#9ec0ff');
+    g.box(13, 6, 2, 2, '#9ec0ff');
+    g.box(11, 11, 2, 2, '#f5c249');
     g.box(9, 9, 2, 2, SPRITE_INK);
     g.box(14, 9, 2, 2, SPRITE_INK);
+    g.set(9, 9, '#ffffff');
+    g.set(14, 9, '#ffffff');
+    g.box(8, 20, 3, 2, '#e3aa3b');
+    g.box(13, 20, 3, 2, '#e3aa3b');
     blink.box(9, 9, 2, 1, '#dce6f7');
     blink.box(14, 9, 2, 1, '#dce6f7');
   } else if (pet.sprite === 'phoenix') {
-    // Solar Phoenix with blazing crest & golden tail plumes
-    g.poly([[12, 18], [8, 22], [16, 22]], '#ffcf4d');
-    g.poly([[6, 13], [2, 8], [7, 17]], '#ffaa47');
-    g.poly([[18, 13], [22, 8], [17, 17]], '#ffaa47');
-    g.ellipse(12, 15, 5, 5, base);
+    // Solar Phoenix: blazing 3-plume crown, layered fire wings & golden tail
+    g.poly([[12, 17], [8, 22], [16, 22]], '#ffcf4d');
+    g.box(11, 19, 2, 3, '#fff099');
+    g.poly([[6, 13], [2, 7], [7, 17]], '#ff9e3d');
+    g.poly([[18, 13], [22, 7], [17, 17]], '#ff9e3d');
+    g.box(3, 9, 2, 3, '#ffe066');
+    g.box(19, 9, 2, 3, '#ffe066');
+    g.ellipse(12, 15, 5, 4, base);
+    g.box(10, 14, 4, 3, '#ffcf5c');
     g.ellipse(12, 10, 4, 3, light);
     g.poly([[10, 7], [12, 3], [14, 7]], '#ffe675');
-    g.box(10, 9, 1, 2, '#fff8cc');
-    g.box(13, 9, 1, 2, '#fff8cc');
+    g.set(9, 5, '#ffb84d');
+    g.set(15, 5, '#ffb84d');
+    g.box(10, 9, 1, 2, '#fff9d6');
+    g.box(13, 9, 1, 2, '#fff9d6');
     g.box(11, 11, 2, 1, '#ffe066');
     blink.box(10, 9, 1, 2, light);
     blink.box(13, 9, 1, 2, light);
   } else {
-    // Astral Wyrmling
-    g.poly([[7, 14], [3, 9], [6, 17]], light);
-    g.poly([[17, 14], [21, 9], [18, 17]], light);
+    // Astral Wyrmling: starlit wings, twin ivory horns & plated belly scales
+    g.poly([[7, 14], [2, 8], [6, 17]], '#8e74c9');
+    g.poly([[17, 14], [22, 8], [18, 17]], '#8e74c9');
+    g.set(4, 11, '#fff3b8');
+    g.set(19, 11, '#fff3b8');
     g.ellipse(12, 17, 5, 4, base);
+    g.box(10, 15, 4, 5, '#fff3cc');
+    g.box(10, 17, 4, 1, '#e8c468');
     g.ellipse(12, 10, 4, 3, base);
-    g.poly([[8, 8], [7, 4], [10, 7]], '#fff4cc');
-    g.poly([[16, 8], [17, 4], [14, 7]], '#fff4cc');
+    g.poly([[8, 8], [7, 3], [10, 7]], '#fff4cc');
+    g.poly([[16, 8], [17, 3], [14, 7]], '#fff4cc');
     g.box(9, 10, 2, 2, '#4a3066');
     g.box(13, 10, 2, 2, '#4a3066');
     g.set(9, 10, '#ffffff');
@@ -305,12 +434,48 @@ export function buildPetSprite(pet: Pick<OwnedPet, 'sprite' | 'color'>): {
   }
 
   g.applyOutline(SPRITE_INK);
+
+  // Evolution stage accents (Awakened Lv.5+ / Ascended Lv.10+)
+  if (level >= 5) {
+    g.set(2, 2, '#ffe885');
+    g.set(21, 3, '#ffe885');
+  }
+  if (level >= 10) {
+    g.set(2, 1, '#ffffff');
+    g.set(2, 3, '#ffd24c');
+    g.set(1, 2, '#ffd24c');
+    g.set(3, 2, '#ffd24c');
+    g.set(20, 2, '#fff5ba');
+    g.set(21, 5, '#9ef0ff');
+  }
+
   return {
     width: 24,
     height: 24,
     rects: g.toSvgRects(),
     blinkRects: blink.toSvgRects(),
   };
+}
+
+export function buildPetEggSprite(): { width: number; height: number; rects: string } {
+  const g = new PixelGrid(20, 20);
+  // Warm mossy twig nest
+  g.ellipse(10, 16, 7, 3, '#6b4728');
+  g.box(4, 15, 12, 2, '#8a5d36');
+  g.box(5, 14, 3, 2, '#5c9652');
+  g.box(12, 14, 3, 2, '#5c9652');
+  // Speckled Arcane Egg
+  g.ellipse(10, 10, 5, 6, '#dfd3f5');
+  g.ellipse(9, 9, 3, 4, '#f3ecff');
+  g.box(7, 6, 2, 3, '#ffffff');
+  g.box(8, 12, 4, 3, '#b89ee6');
+  // Glowing rune cracks
+  g.box(9, 8, 2, 2, '#e8b84b');
+  g.set(11, 10, '#e8b84b');
+  g.set(12, 11, '#ffe48f');
+  g.set(7, 11, '#a27df2');
+  g.applyOutline(SPRITE_INK);
+  return { width: 20, height: 20, rects: g.toSvgRects() };
 }
 
 export type AchievementBadgeId =
@@ -702,6 +867,144 @@ export function buildItemSprite(sprite: GearItem['sprite']): {
     g.poly([[16, 11], [22, 17], [16, 25], [10, 17]], '#5cc9d6');
     g.poly([[16, 12], [19, 17], [16, 22], [13, 17]], '#a8f7ff');
     g.set(15, 15, '#ffffff');
+  }
+
+  g.applyOutline(SPRITE_INK);
+  return { width: 32, height: 32, rects: g.toSvgRects() };
+}
+
+export type ChallengeBadgeId = 'focus' | 'quests' | 'streak' | 'boss';
+
+export function buildChallengeBadge(
+  id: ChallengeBadgeId,
+  completed: boolean
+): { width: number; height: number; rects: string } {
+  const g = new PixelGrid(24, 24);
+
+  if (id === 'focus') {
+    // Violet Arcane Crest (Focus Emblem)
+    const rim = completed ? '#e6c25c' : '#8570bd';
+    const rimHi = completed ? '#fff1a8' : '#b7a3eb';
+    const face = completed ? '#5d3ea8' : '#3a2c61';
+    const faceHi = completed ? '#7c5cd1' : '#4f3d80';
+    g.poly([[12, 2], [20, 6], [19, 15], [12, 21], [5, 15], [4, 6]], rim);
+    g.poly([[12, 3], [19, 7], [18, 14], [12, 19], [6, 14], [5, 7]], face);
+    g.poly([[12, 3], [12, 19], [6, 14], [5, 7]], faceHi);
+    g.line(5, 6, 12, 3, rimHi, 1);
+    // Hourglass / Arcane Star inside
+    g.box(9, 7, 6, 2, '#f5d97a');
+    g.poly([[10, 9], [14, 9], [12, 12]], '#9be8ff');
+    g.poly([[12, 12], [10, 15], [14, 15]], '#9be8ff');
+    g.box(9, 15, 6, 2, '#f5d97a');
+    g.set(12, 12, '#ffffff');
+  } else if (id === 'quests') {
+    // Golden Parchment & Quill Seal (Questkeeper Seal)
+    const rim = completed ? '#f0c859' : '#a8874d';
+    const face = completed ? '#a36b24' : '#5e4628';
+    g.ellipse(12, 12, 9, 9, rim);
+    g.ellipse(12, 12, 7, 7, face);
+    // Scroll & Ribbon inside
+    g.box(8, 7, 8, 9, '#f5e8c8');
+    g.box(7, 7, 10, 2, '#fff5de');
+    g.box(7, 15, 10, 2, '#d9c598');
+    g.box(9, 10, 5, 1, '#5e4628');
+    g.box(9, 12, 4, 1, '#5e4628');
+    g.ellipse(15, 15, 2, 2, '#d93d4e');
+    g.set(15, 14, '#ff9aa6');
+  } else if (id === 'streak') {
+    // Emerald Oath Flame Shield (Oath Flame Crest)
+    const rim = completed ? '#6fe8ab' : '#4a8f6f';
+    const face = completed ? '#1d6948' : '#1b3f32';
+    g.poly([[12, 2], [20, 6], [20, 14], [12, 21], [4, 14], [4, 6]], rim);
+    g.poly([[12, 4], [18, 7], [18, 13], [12, 19], [6, 13], [6, 7]], face);
+    // Radiant Flame
+    g.poly([[12, 6], [16, 12], [14, 17], [10, 17], [8, 12]], '#ff8b3d');
+    g.poly([[12, 8], [14, 13], [12, 16], [10, 13]], '#ffe066');
+    g.set(12, 12, '#ffffff');
+  } else {
+    // Crimson Wyrmslayer Medallion (Wyrm Hunter)
+    const rim = completed ? '#f2b84b' : '#9c5260';
+    const face = completed ? '#8f263b' : '#4d212b';
+    g.ellipse(12, 12, 9, 9, rim);
+    g.ellipse(12, 12, 7, 7, face);
+    // Crossed Sword + Fang Crest
+    g.line(7, 16, 16, 7, '#e8f1fa', 2);
+    g.line(8, 7, 16, 15, '#c8d6e6', 1);
+    g.box(8, 14, 3, 2, '#f5d067');
+    g.box(14, 14, 3, 2, '#f5d067');
+    g.poly([[11, 7], [13, 7], [12, 10]], '#ffcf66');
+  }
+
+  g.applyOutline(SPRITE_INK);
+  return { width: 24, height: 24, rects: g.toSvgRects() };
+}
+
+export function buildMarketSupplySprite(id: string): {
+  width: number;
+  height: number;
+  rects: string;
+} {
+  const g = new PixelGrid(32, 32);
+
+  if (id === 'mystery-chest') {
+    // Detailed pixel wooden & gold-banded Treasure Chest
+    g.box(6, 10, 20, 14, '#7d4d27');
+    g.box(8, 11, 16, 5, '#a36836');
+    g.box(6, 16, 20, 2, '#422813');
+    g.box(8, 18, 16, 5, '#8c582d');
+    // Gold/Brass corner straps
+    g.box(6, 10, 2, 14, '#d9b54e');
+    g.box(24, 10, 2, 14, '#d9b54e');
+    g.box(11, 10, 2, 14, '#c7a03c');
+    g.box(19, 10, 2, 14, '#c7a03c');
+    // Center Latch
+    g.box(14, 14, 4, 5, '#e8e8f0');
+    g.box(15, 16, 2, 2, '#5e5e6e');
+  } else if (id === 'healing-elixir') {
+    // Sparkling Golden-Ruby Healing Potion Flask
+    g.box(13, 5, 6, 3, '#b57b4a');
+    g.box(12, 8, 8, 3, '#e8f4fc');
+    g.ellipse(16, 19, 7, 7, '#f5d55b');
+    g.ellipse(15, 17, 5, 4, '#fff299');
+    g.box(17, 18, 3, 3, '#eb547d');
+    g.set(12, 17, '#ffffff');
+    // Sparkles
+    g.set(10, 9, '#ffd95e');
+    g.set(22, 10, '#ffd95e');
+    g.set(24, 15, '#fff5a8');
+  } else if (id === 'pet-treats') {
+    // Crimson & Leather Companion Saddle / Treat Pack
+    g.poly([[10, 12], [18, 9], [23, 14], [21, 21], [11, 20]], '#c93e3e');
+    g.poly([[12, 13], [17, 11], [20, 15], [13, 18]], '#eb5c52');
+    g.box(10, 10, 4, 4, '#8c3b2b');
+    g.box(17, 17, 3, 5, '#7a4829');
+    g.box(17, 21, 4, 2, '#e8c45e');
+    g.line(12, 19, 10, 25, '#59331c', 2);
+    g.box(8, 24, 4, 2, '#c7ccd6');
+  } else if (id === 'bounty-writ') {
+    // Sealed Envelope / Scroll with Golden Coin Crest
+    g.box(7, 14, 18, 11, '#f7f0d4');
+    g.box(8, 15, 16, 9, '#fff9e6');
+    g.line(7, 14, 16, 21, '#c9b385', 1);
+    g.line(25, 14, 16, 21, '#c9b385', 1);
+    g.box(14, 19, 4, 3, '#d93848');
+    // Floating Gold Emblem above
+    g.ellipse(16, 9, 3, 3, '#f2c249');
+    g.set(15, 8, '#fff5a8');
+  } else if (id === 'scroll-damage') {
+    // Fiery Attack Scroll
+    g.box(8, 7, 16, 18, '#f0dfc0');
+    g.box(7, 7, 18, 3, '#c99c5b');
+    g.box(7, 22, 18, 3, '#c99c5b');
+    g.poly([[16, 11], [20, 16], [17, 20], [14, 20], [12, 16]], '#eb5738');
+    g.box(15, 15, 2, 4, '#ffe169');
+  } else {
+    // Sapphire Mana Tonic
+    g.box(13, 5, 6, 3, '#9c6e46');
+    g.box(12, 8, 8, 3, '#dceef7');
+    g.ellipse(16, 19, 7, 7, '#3b82f6');
+    g.ellipse(14, 17, 4, 4, '#93c5fd');
+    g.set(12, 16, '#ffffff');
   }
 
   g.applyOutline(SPRITE_INK);

@@ -11,27 +11,32 @@ export type EquipSlot =
 
 export type HabitKind = 'good' | 'bad';
 export type HabitRhythm = 'daily' | 'every' | 'monthly' | 'weekdays';
+export type TaskPriority = 'A' | 'B' | 'C';
+export type LifeDomain = 'Knowledge' | 'Strength' | 'Discipline' | 'Mindfulness';
 export type TabId = 'habits' | 'todos' | 'rewards' | 'realm';
 export type SeasonTheme = 'fall' | 'christmas';
+export type AppLanguage = 'en' | 'de';
+export type TimeOfDay = 'morning' | 'day' | 'evening' | 'any';
 
 export type RealmSection =
   | ''
   | 'Profile'
   | 'Stats'
   | 'Skills'
+  | 'Skill Tree'
+  | 'World Map'
+  | 'My Home'
+  | 'Analytics'
+  | 'Weekly Review'
   | 'Equipment'
   | 'Pets'
   | 'Boss'
   | 'Challenges'
-  | 'Guild'
   | 'Market'
-  | 'Quest Shop'
   | 'Customization Shop'
   | 'Seasonal Shop'
   | 'Time Traveler Shop'
-  | 'Friends'
   | 'Achievements'
-  | 'Focus'
   | 'Settings';
 
 export interface AvatarConfig {
@@ -61,6 +66,10 @@ export interface HabitItem {
   rhythm: HabitRhythm;
   everyDays?: number;
   weekdays: number[];
+  priority?: TaskPriority;
+  domain?: LifeDomain;
+  timeOfDay?: TimeOfDay;
+  pinnedToBoard?: boolean;
   createdDate: string;
   doneDates: string[];
   slips: string[];
@@ -71,6 +80,9 @@ export interface TodoItem {
   id: string;
   title: string;
   dueDate: string;
+  priority?: TaskPriority;
+  domain?: LifeDomain;
+  pinnedToBoard?: boolean;
   done: boolean;
 }
 
@@ -211,6 +223,7 @@ export const PET_PERKS: Record<PetSpriteId, PetPerk> = {
 export interface OwnedPet {
   id: string;
   name: string;
+  nickname?: string;
   rarity: PetRarity | string;
   sprite: PetSpriteId;
   color: string;
@@ -244,6 +257,111 @@ export interface HistoryEntry {
   id: string;
   at: string;
   text: string;
+}
+
+export interface DailyQuestEntry {
+  id: string;
+  refType: 'habit' | 'todo';
+  refId: string;
+  title: string;
+  priority: TaskPriority;
+  domain: LifeDomain;
+  xpReward: number;
+  goldReward: number;
+  done: boolean;
+  pinned?: boolean;
+}
+
+export interface DailyQuestBoard {
+  date: string;
+  quests: DailyQuestEntry[];
+  bonusClaimed: boolean;
+}
+
+export interface WorldState {
+  currentRegionId: string;
+  exploredRegions: string[];
+  claimedChests: string[];
+  lastEncounterByRegion?: Record<string, string>;
+  regionMastery?: Record<string, number>;
+  merchantDiscountPct?: number;
+}
+
+export interface SkillTreeState {
+  domainXp: Record<LifeDomain, number>;
+  domainLevel: Record<LifeDomain, number>;
+  skillPoints: number;
+  unlockedNodes: string[];
+}
+
+export interface WeeklyBossState {
+  weekKey: string;
+  bossIndex: number;
+  maxHp: number;
+  hp: number;
+  damageDealt: number;
+  specialStrikes: number;
+  habitsHit: number;
+  evaluated: boolean;
+  affinityDomain?: LifeDomain;
+}
+
+export type HomeRoomId = 'living' | 'library' | 'training' | 'garden' | 'trophy';
+
+export interface HomeState {
+  houseName: string;
+  rooms: Record<HomeRoomId, number>;
+  furniture: string[];
+  trophies: string[];
+}
+
+export interface ActiveFocusSession {
+  durationMin: 25 | 50 | 90;
+  startedAt: number;
+  questRefType: 'habit' | 'todo' | 'free';
+  questRefId: string;
+  questTitle: string;
+  domain: LifeDomain;
+}
+
+export interface FocusHistoryEntry {
+  id: string;
+  date: string;
+  minutes: number;
+  domain: LifeDomain;
+  questTitle: string;
+  xp: number;
+}
+
+export interface FocusSessionState {
+  active: ActiveFocusSession | null;
+  totalMinutes: number;
+  sessionsCompleted: number;
+  history: FocusHistoryEntry[];
+}
+
+export interface DailyStatsRecord {
+  date: string;
+  completedTasks: number;
+  focusMinutes: number;
+  xpEarned: number;
+  hpLost: number;
+  cleanDay: boolean;
+}
+
+export interface WeeklyReviewHistory {
+  weekKey: string;
+  questsDone: number;
+  focusMinutes: number;
+  hpLost: number;
+  bossDmg: number;
+  goals: string[];
+}
+
+export interface WeeklyReviewState {
+  lastReviewedWeek: string;
+  nextWeekGoals: string[];
+  pastReviews: WeeklyReviewHistory[];
 }
 
 export interface HeroSave {
@@ -294,6 +412,17 @@ export interface HeroSave {
   faintCount: number;
   welcomeShown: boolean;
   onboardingRewardClaimed: boolean;
+  dailyBoard: DailyQuestBoard;
+  world: WorldState;
+  skillTree: SkillTreeState;
+  weeklyBoss: WeeklyBossState;
+  home: HomeState;
+  focus: FocusSessionState;
+  dailyHistory: Record<string, DailyStatsRecord>;
+  weeklyReview: WeeklyReviewState;
+  language?: AppLanguage;
+  routineCombosDate?: string;
+  routineCombosDone?: ('morning' | 'day' | 'evening')[];
 }
 
 export type GearSpriteId =
@@ -538,10 +667,54 @@ export const EQUIP_SLOTS: EquipSlot[] = [
 ];
 
 export const CHALLENGES = [
-  { id: 'focus', name: 'The Focus Trials', desc: 'Complete 5 good habit check-offs.', target: 5, kind: 'habit', joinGold: 20, completionGold: 55, completionXP: 75, color: '#a48aff' },
-  { id: 'quests', name: 'The Questkeeper', desc: 'Finish 3 one-time To-Dos.', target: 3, kind: 'todo', joinGold: 20, completionGold: 45, completionXP: 60, color: '#e4b77d' },
-  { id: 'streak', name: 'Seven-Day Oath', desc: 'Finish daily rollover with a clean day 5 times.', target: 5, kind: 'clean', joinGold: 20, completionGold: 70, completionXP: 90, color: '#73cea5' },
-  { id: 'boss', name: 'Wyrm Hunter', desc: 'Defeat 1 raid boss.', target: 1, kind: 'boss', joinGold: 20, completionGold: 65, completionXP: 90, color: '#e38496' },
+  {
+    id: 'focus',
+    name: 'The Focus Trials',
+    badgeName: 'Focus Emblem',
+    desc: 'Complete 5 good habit check-offs.',
+    target: 5,
+    kind: 'habit',
+    joinGold: 20,
+    completionGold: 55,
+    completionXP: 75,
+    color: '#a48aff',
+  },
+  {
+    id: 'quests',
+    name: 'The Questkeeper',
+    badgeName: 'Questkeeper Seal',
+    desc: 'Finish 3 one-time To-Dos.',
+    target: 3,
+    kind: 'todo',
+    joinGold: 20,
+    completionGold: 45,
+    completionXP: 60,
+    color: '#e4b77d',
+  },
+  {
+    id: 'streak',
+    name: 'Seven-Day Oath',
+    badgeName: 'Oath Flame Crest',
+    desc: 'Finish daily rollover with a clean day 5 times.',
+    target: 5,
+    kind: 'clean',
+    joinGold: 20,
+    completionGold: 70,
+    completionXP: 90,
+    color: '#73cea5',
+  },
+  {
+    id: 'boss',
+    name: 'Wyrm Hunter',
+    badgeName: 'Wyrmslayer Medallion',
+    desc: 'Defeat 1 raid boss.',
+    target: 1,
+    kind: 'boss',
+    joinGold: 20,
+    completionGold: 65,
+    completionXP: 90,
+    color: '#e38496',
+  },
 ] as const;
 
 export const CITY_BUILDINGS = [
@@ -561,11 +734,61 @@ export const COSMETICS = [
 ];
 
 export const QUEST_SHOP = [
-  { id: 'scroll-damage', name: 'Attack Scroll', cost: 32, desc: 'Queue +15 boss damage for the next battle' },
-  { id: 'healing-elixir', name: 'Healing Elixir', cost: 28, desc: 'Restore 12 HP immediately' },
-  { id: 'mana-tonic', name: 'Mana Tonic', cost: 22, desc: 'Restore 8 MP immediately' },
-  { id: 'pet-treats', name: '3x Pet Treats', cost: 15, desc: 'Feed your summoned pets to level them up' },
-];
+  {
+    id: 'mystery-chest',
+    name: "Merlin's Mystery Chest",
+    cost: 100,
+    desc: 'Unlock a random unowned gear item (or +1 Pet Egg & +35 XP if all gear owned)',
+    category: 'Chest',
+    featured: true,
+    pinned: true,
+  },
+  {
+    id: 'healing-elixir',
+    name: 'Healing Elixir',
+    cost: 28,
+    desc: 'Restore 12 HP immediately',
+    category: 'Potion',
+    featured: true,
+    pinned: false,
+  },
+  {
+    id: 'pet-treats',
+    name: '3x Pet Treats',
+    cost: 15,
+    desc: 'Feed your summoned pets to level them up',
+    category: 'Companion',
+    featured: true,
+    pinned: false,
+  },
+  {
+    id: 'bounty-writ',
+    name: "Merlin's Bounty Writ",
+    cost: 10,
+    desc: 'Queue +10 Boss DMG and gain +6 XP immediately',
+    category: 'Scroll',
+    featured: true,
+    pinned: false,
+  },
+  {
+    id: 'scroll-damage',
+    name: 'Attack Scroll',
+    cost: 32,
+    desc: 'Queue +15 boss damage for the next battle',
+    category: 'Scroll',
+    featured: false,
+    pinned: false,
+  },
+  {
+    id: 'mana-tonic',
+    name: 'Mana Tonic',
+    cost: 22,
+    desc: 'Restore 8 MP immediately',
+    category: 'Potion',
+    featured: false,
+    pinned: false,
+  },
+] as const;
 
 export const PETS: { name: string; rarity: PetRarity; weight: number; color: string; sprite: PetSpriteId }[] = [
   // Common (48%)
@@ -596,3 +819,286 @@ export const BOSSES = [
   { name: 'THE OBSIDIAN ARCHIVIST', subtitle: 'A keeper of unanswered promises', hp: 320, color: '#91a7e2', art: 'golem' as const },
   { name: 'THE NIGHTSHADE SOVEREIGN', subtitle: 'The shadow that grows when time is lost', hp: 430, color: '#a887d4', art: 'hydra' as const },
 ];
+
+export const PRIORITY_CONFIG: Record<
+  TaskPriority,
+  { label: string; short: string; xpMult: number; goldMult: number; dmgMult: number; color: string; bg: string }
+> = {
+  A: {
+    label: 'Priority A · High Impact',
+    short: 'A',
+    xpMult: 1.5,
+    goldMult: 1.5,
+    dmgMult: 1.6,
+    color: '#fb923c',
+    bg: 'rgba(251, 146, 60, 0.16)',
+  },
+  B: {
+    label: 'Priority B · Standard',
+    short: 'B',
+    xpMult: 1.0,
+    goldMult: 1.0,
+    dmgMult: 1.0,
+    color: '#60a5fa',
+    bg: 'rgba(96, 165, 250, 0.14)',
+  },
+  C: {
+    label: 'Priority C · Light',
+    short: 'C',
+    xpMult: 0.75,
+    goldMult: 0.75,
+    dmgMult: 0.75,
+    color: '#9c9cb0',
+    bg: 'rgba(156, 156, 176, 0.14)',
+  },
+};
+
+export const LIFE_DOMAINS: LifeDomain[] = ['Knowledge', 'Strength', 'Discipline', 'Mindfulness'];
+
+export const DOMAIN_META: Record<
+  LifeDomain,
+  { color: string; desc: string; examples: string }
+> = {
+  Knowledge: {
+    color: '#60a5fa',
+    desc: 'Reading, studying, writing, coding & deep learning.',
+    examples: 'Study, Read, Course, Code',
+  },
+  Strength: {
+    color: '#f87171',
+    desc: 'Workouts, running, sports, mobility & physical vitality.',
+    examples: 'Gym, Run, Pushups, Walk',
+  },
+  Discipline: {
+    color: '#fbbf24',
+    desc: 'Routines, chores, planning, budgeting & consistency.',
+    examples: 'Clean, Plan, No Sugar, Budget',
+  },
+  Mindfulness: {
+    color: '#5ce09e',
+    desc: 'Meditation, journaling, sleep, breathwork & reflection.',
+    examples: 'Meditate, Journal, Sleep',
+  },
+};
+
+export interface WorldRegionDef {
+  id: string;
+  name: string;
+  biome: 'Forest' | 'Village' | 'Dungeon' | 'Castle' | 'Sanctuary' | 'Citadel';
+  difficulty: 'Safe' | 'Guarded' | 'Perilous' | 'Deadly' | 'Mythic' | 'Abyssal';
+  desc: string;
+  lore: string;
+  reqLevel: number;
+  reqChecks: number;
+  reqFocusMin: number;
+  reqBossWins: number;
+  reqStreak?: number;
+  reqStatSum?: number;
+  reqDomainLv?: number;
+  trialLabelEn: string;
+  trialLabelDe: string;
+  rewardXp: number;
+  rewardGold: number;
+  rewardEgg?: boolean;
+  mapX: number;
+  mapY: number;
+  color: string;
+}
+
+export const WORLD_REGIONS: WorldRegionDef[] = [
+  {
+    id: 'whispering-woods',
+    name: 'Whispering Woods',
+    biome: 'Forest',
+    difficulty: 'Safe',
+    desc: 'Sunlit pine trails where every lone adventurer tests their first daily rhythm.',
+    lore: 'Ancient moss stones hum softly whenever you check off a habit at dawn.',
+    reqLevel: 1,
+    reqChecks: 0,
+    reqFocusMin: 0,
+    reqBossWins: 0,
+    trialLabelEn: 'Starter Sanctuary',
+    trialLabelDe: 'Start-Zuflucht',
+    rewardXp: 25,
+    rewardGold: 20,
+    mapX: 16,
+    mapY: 66,
+    color: '#5ce09e',
+  },
+  {
+    id: 'oakhaven-village',
+    name: 'Oakhaven Village',
+    biome: 'Village',
+    difficulty: 'Guarded',
+    desc: 'A lantern-lit river port welcoming disciplined solo travelers.',
+    lore: 'Timber workshops, river docks, and hearth smoke mark the heart of the valley.',
+    reqLevel: 2,
+    reqChecks: 5,
+    reqFocusMin: 0,
+    reqBossWins: 0,
+    reqStreak: 2,
+    trialLabelEn: '2-Day Habit Streak',
+    trialLabelDe: '2-Tage-Streak',
+    rewardXp: 45,
+    rewardGold: 40,
+    mapX: 34,
+    mapY: 44,
+    color: '#e8b84b',
+  },
+  {
+    id: 'moss-catacombs',
+    name: 'Moss Catacombs',
+    biome: 'Dungeon',
+    difficulty: 'Perilous',
+    desc: 'Subterranean vaults where procrastination shadows ambush lone scouts.',
+    lore: 'Torches flare brighter with every streak you defend in battle.',
+    reqLevel: 4,
+    reqChecks: 15,
+    reqFocusMin: 0,
+    reqBossWins: 1,
+    reqStreak: 4,
+    trialLabelEn: '4-Day Habit Streak',
+    trialLabelDe: '4-Tage-Streak',
+    rewardXp: 75,
+    rewardGold: 60,
+    rewardEgg: true,
+    mapX: 52,
+    mapY: 68,
+    color: '#a78bfa',
+  },
+  {
+    id: 'sunspire-keep',
+    name: 'Sunspire Keep',
+    biome: 'Castle',
+    difficulty: 'Deadly',
+    desc: 'High limestone battlements guarding the arid eastern plateau.',
+    lore: 'Only solo heroes tempered in gear and battle stats hold its banners.',
+    reqLevel: 6,
+    reqChecks: 28,
+    reqFocusMin: 0,
+    reqBossWins: 2,
+    reqStatSum: 26,
+    trialLabelEn: '26+ Total Hero Stats',
+    trialLabelDe: '26+ Gesamt-Attribute',
+    rewardXp: 105,
+    rewardGold: 85,
+    mapX: 68,
+    mapY: 36,
+    color: '#60a5fa',
+  },
+  {
+    id: 'astral-observatory',
+    name: 'Astral Observatory',
+    biome: 'Sanctuary',
+    difficulty: 'Mythic',
+    desc: 'A snow-peaked crystal dome tuned to deep mastery and inner poise.',
+    lore: 'Starlight lenses chart your skill-tree progress across the northern sky.',
+    reqLevel: 8,
+    reqChecks: 42,
+    reqFocusMin: 0,
+    reqBossWins: 3,
+    reqDomainLv: 3,
+    trialLabelEn: 'Any Skill Lv. 3+',
+    trialLabelDe: 'Ein Skill Lv. 3+',
+    rewardXp: 140,
+    rewardGold: 110,
+    rewardEgg: true,
+    mapX: 84,
+    mapY: 62,
+    color: '#38bdf8',
+  },
+  {
+    id: 'obsidian-citadel',
+    name: 'Obsidian Citadel',
+    biome: 'Citadel',
+    difficulty: 'Abyssal',
+    desc: 'The volcanic throne where Raid Bosses forge their storms against solo champions.',
+    lore: 'Its iron gates yield only to unwavering streaks, battle power, and boss victories.',
+    reqLevel: 10,
+    reqChecks: 60,
+    reqFocusMin: 0,
+    reqBossWins: 5,
+    reqStreak: 7,
+    reqStatSum: 42,
+    trialLabelEn: '7-Day Streak & 42+ Stats',
+    trialLabelDe: '7-Tage-Streak & 42+ Stats',
+    rewardXp: 200,
+    rewardGold: 160,
+    rewardEgg: true,
+    mapX: 86,
+    mapY: 22,
+    color: '#fb923c',
+  },
+];
+
+export interface SkillNodeDef {
+  id: string;
+  domain: LifeDomain;
+  tier: 1 | 2 | 3;
+  name: string;
+  effect: string;
+  cost: number;
+  requires?: string;
+}
+
+export const SKILL_TREE_NODES: SkillNodeDef[] = [
+  { id: 'know-1', domain: 'Knowledge', tier: 1, name: "Scholar's Spark", effect: '+15% XP from completed quests', cost: 1 },
+  { id: 'know-2', domain: 'Knowledge', tier: 2, name: 'Arcane Flow', effect: '+2 INT & +1 MP per habit check', cost: 1, requires: 'know-1' },
+  { id: 'know-3', domain: 'Knowledge', tier: 3, name: 'Master Thesis', effect: '+4 XP on Priority A & B quests', cost: 2, requires: 'know-2' },
+
+  { id: 'str-1', domain: 'Strength', tier: 1, name: 'Iron Form', effect: '+3 Boss DMG per completed quest', cost: 1 },
+  { id: 'str-2', domain: 'Strength', tier: 2, name: 'Titan Grip', effect: '+2 STR & +30% Special Attack DMG', cost: 1, requires: 'str-1' },
+  { id: 'str-3', domain: 'Strength', tier: 3, name: 'Dragonbreaker', effect: '+8 Boss DMG on every quest', cost: 2, requires: 'str-2' },
+
+  { id: 'disc-1', domain: 'Discipline', tier: 1, name: 'Steady Pace', effect: '+2 Gold per completed quest', cost: 1 },
+  { id: 'disc-2', domain: 'Discipline', tier: 2, name: 'Ironclad Will', effect: '+2 DEF & block 2 missed-habit DMG', cost: 1, requires: 'disc-1' },
+  { id: 'disc-3', domain: 'Discipline', tier: 3, name: 'Unbroken Oath', effect: '+25% Gold from Daily Board & Bosses', cost: 2, requires: 'disc-2' },
+
+  { id: 'mind-1', domain: 'Mindfulness', tier: 1, name: 'Calm Breath', effect: '+2 HP healed on clean day rollover', cost: 1 },
+  { id: 'mind-2', domain: 'Mindfulness', tier: 2, name: 'Deep Presence', effect: '+2 XP per quest & +1 AGI', cost: 1, requires: 'mind-1' },
+  { id: 'mind-3', domain: 'Mindfulness', tier: 3, name: 'Inner Sanctuary', effect: 'Bad habit slips deal 3 HP instead of 5', cost: 2, requires: 'mind-2' },
+];
+
+export const HOME_ROOMS: {
+  id: HomeRoomId;
+  name: string;
+  desc: string;
+  baseCost: number;
+  maxLevel: number;
+}[] = [
+  { id: 'living', name: 'Hearth & Living Hall', desc: '+2 Gold per completed quest per level', baseCost: 40, maxLevel: 5 },
+  { id: 'library', name: 'Study Library', desc: '+2 XP per completed quest per level', baseCost: 45, maxLevel: 5 },
+  { id: 'training', name: 'Training Room', desc: '+1 STR & +2 Boss DMG per level', baseCost: 45, maxLevel: 5 },
+  { id: 'garden', name: 'Herb Garden', desc: 'Restore +1 HP on clean day rollover per level', baseCost: 35, maxLevel: 5 },
+  { id: 'trophy', name: 'Trophy Alcove', desc: '+1 DEF per level (+1 All Stats at Lv. 3+)', baseCost: 50, maxLevel: 5 },
+];
+
+export const HOME_FURNITURE: {
+  id: string;
+  name: string;
+  room: HomeRoomId;
+  cost: number;
+  perk: string;
+}[] = [
+  { id: 'oak-hearth', name: 'Crackling Hearth', room: 'living', cost: 45, perk: '+1 HP healed on clean days' },
+  { id: 'woven-rug', name: 'Embroidered Tapestry Rug', room: 'living', cost: 55, perk: '+2 Gold on Daily Board bonus' },
+  { id: 'scholar-desk', name: 'Rune-Carved Desk', room: 'library', cost: 60, perk: '+1 INT permanently' },
+  { id: 'star-telescope', name: 'Brass Astrolabe', room: 'library', cost: 85, perk: '+15% Quest XP' },
+  { id: 'iron-dummy', name: 'Sparring Automaton', room: 'training', cost: 65, perk: '+3 Boss DMG per quest' },
+  { id: 'moon-planter', name: 'Moonflower Planter', room: 'garden', cost: 50, perk: '+1 AGI permanently' },
+];
+
+export const HOME_TROPHIES: Record<string, { name: string; desc: string; color: string }> = {
+  'first-weekly-boss': { name: 'Warden Banner', desc: 'Defeated or survived your first Weekly Boss.', color: '#fb923c' },
+  'boss-slayer': { name: 'Wyrmfang Crest', desc: 'Vanquished a Raid Boss.', color: '#e25f5f' },
+  'focus-adept': { name: 'Hourglass Relic', desc: 'Completed 25 Habits & To-Dos.', color: '#60a5fa' },
+  'world-explorer': { name: 'Cartographer Compass', desc: 'Explored 3 regions of the RPG World.', color: '#5ce09e' },
+  'board-master': { name: 'Golden Seal', desc: 'Completed a full Daily Quest Board.', color: '#e8b84b' },
+};
+
+export const WEEKLY_BOSSES = [
+  { name: 'THE IRON LEVIATHAN', title: 'Breaker of Routines', baseHp: 350, color: '#e05f72', art: 'wyrm' as const },
+  { name: 'THE CHRONO WARDEN', title: 'Lord of Drifting Hours', baseHp: 420, color: '#60a5fa', art: 'golem' as const },
+  { name: 'THE ECLIPSE HYDRA', title: 'Threefold Shadow of Doubt', baseHp: 500, color: '#a78bfa', art: 'hydra' as const },
+];
+
