@@ -21,9 +21,9 @@ export default defineConfig(() => {
           'pwa-maskable-512x512.png',
         ],
         manifest: {
-          id: '/',
-          start_url: '/',
-          scope: '/',
+          id: '/App/',
+start_url: '/App/',
+scope: '/App/',
           name: 'ARCANA — Pixel RPG Habit Tracker',
           short_name: 'ARCANA',
           description:
