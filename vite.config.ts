@@ -7,8 +7,10 @@ import {defineConfig} from 'vite';
 import {VitePWA} from 'vite-plugin-pwa';
 
 export default defineConfig(() => {
+  const base = process.env.GITHUB_ACTIONS === 'true' ? '/App/' : '/';
+
   return {
-    base: '/App/',
+    base,
 
     plugins: [
       react(),
@@ -26,9 +28,9 @@ export default defineConfig(() => {
         ],
 
         manifest: {
-          id: '/App/',
-          start_url: '/App/',
-          scope: '/App/',
+          id: base,
+          start_url: base,
+          scope: base,
 
           name: 'ARCANA — Pixel RPG Habit Tracker',
           short_name: 'ARCANA',
@@ -42,19 +44,19 @@ export default defineConfig(() => {
 
           icons: [
             {
-              src: '/App/pwa-192x192.png',
+              src: `${base}pwa-192x192.png`,
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/App/pwa-512x512.png',
+              src: `${base}pwa-512x512.png`,
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/App/pwa-maskable-512x512.png',
+              src: `${base}pwa-maskable-512x512.png`,
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
@@ -64,6 +66,7 @@ export default defineConfig(() => {
 
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+          cleanupOutdatedCaches: true,
         },
 
         devOptions: {

@@ -1,23 +1,49 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
-  <rect width="64" height="64" rx="14" fill="#0d0d0f"/>
-  <rect x="8" y="8" width="48" height="48" rx="10" fill="#18181b" stroke="#2c2c33" stroke-width="2"/>
-  <!-- Pixel Shield Frame -->
-  <rect x="20" y="14" width="24" height="4" fill="#e8b84b"/>
-  <rect x="16" y="18" width="32" height="18" fill="#27272c"/>
-  <rect x="18" y="18" width="28" height="16" fill="#1d2230"/>
-  <rect x="20" y="34" width="24" height="8" fill="#1d2230"/>
-  <rect x="24" y="42" width="16" height="6" fill="#1d2230"/>
-  <rect x="28" y="48" width="8" height="4" fill="#e8b84b"/>
-  <!-- Shield Trim -->
-  <rect x="16" y="18" width="2" height="16" fill="#e8b84b"/>
-  <rect x="46" y="18" width="2" height="16" fill="#e8b84b"/>
-  <rect x="18" y="34" width="2" height="8" fill="#c79634"/>
-  <rect x="44" y="34" width="2" height="8" fill="#c79634"/>
-  <rect x="22" y="42" width="2" height="6" fill="#c79634"/>
-  <rect x="40" y="42" width="2" height="6" fill="#c79634"/>
-  <!-- Arcane Diamond Core -->
-  <rect x="30" y="21" width="4" height="4" fill="#93c5fd"/>
-  <rect x="26" y="25" width="12" height="6" fill="#60a5fa"/>
-  <rect x="29" y="26" width="6" height="4" fill="#e0f2fe"/>
-  <rect x="30" y="31" width="4" height="5" fill="#3b82f6"/>
+  <rect width="64" height="64" rx="14" fill="#0e0e10"/>
+  <!-- Ambient twilight glow -->
+  <rect x="14" y="14" width="36" height="36" rx="10" fill="#1a1430" opacity="0.75"/>
+  <!-- Crossed Sapphire Swords -->
+  <rect x="10" y="10" width="4" height="4" fill="#38bdf8"/>
+  <rect x="14" y="14" width="4" height="4" fill="#7c5a3c"/>
+  <rect x="18" y="18" width="4" height="4" fill="#e8b84b"/>
+  <rect x="14" y="21" width="4" height="3" fill="#c79634"/>
+  <rect x="21" y="14" width="3" height="4" fill="#c79634"/>
+  <rect x="50" y="10" width="4" height="4" fill="#38bdf8"/>
+  <rect x="46" y="14" width="4" height="4" fill="#7c5a3c"/>
+  <rect x="42" y="18" width="4" height="4" fill="#e8b84b"/>
+  <rect x="46" y="21" width="4" height="3" fill="#c79634"/>
+  <rect x="40" y="14" width="3" height="4" fill="#c79634"/>
+  <!-- Sword Blade Tips (bottom) -->
+  <rect x="11" y="47" width="6" height="6" fill="#0ea5e9"/>
+  <rect x="13" y="45" width="6" height="6" fill="#38bdf8"/>
+  <rect x="47" y="47" width="6" height="6" fill="#0ea5e9"/>
+  <rect x="45" y="45" width="6" height="6" fill="#38bdf8"/>
+  <!-- Ornate Golden Knight Shield -->
+  <rect x="28" y="13" width="8" height="3" fill="#f3c969"/>
+  <rect x="20" y="16" width="24" height="4" fill="#e8b84b"/>
+  <rect x="16" y="20" width="32" height="18" fill="#c79634"/>
+  <rect x="18" y="20" width="28" height="16" fill="#3b2c1e"/>
+  <rect x="20" y="36" width="24" height="8" fill="#3b2c1e"/>
+  <rect x="24" y="44" width="16" height="6" fill="#3b2c1e"/>
+  <rect x="28" y="50" width="8" height="4" fill="#e8b84b"/>
+  <!-- Shield Gold Trim & Crimson Jewel -->
+  <rect x="16" y="20" width="2" height="16" fill="#e8b84b"/>
+  <rect x="46" y="20" width="2" height="16" fill="#e8b84b"/>
+  <rect x="18" y="36" width="2" height="8" fill="#e8b84b"/>
+  <rect x="44" y="36" width="2" height="8" fill="#e8b84b"/>
+  <rect x="22" y="44" width="2" height="6" fill="#c79634"/>
+  <rect x="40" y="44" width="2" height="6" fill="#c79634"/>
+  <rect x="30" y="16" width="4" height="4" fill="#e11d48"/>
+  <!-- Faceted Arcane Sapphire Gem -->
+  <rect x="28" y="21" width="8" height="4" fill="#e8b84b"/>
+  <rect x="24" y="25" width="16" height="14" fill="#e8b84b"/>
+  <rect x="28" y="39" width="8" height="4" fill="#e8b84b"/>
+  <rect x="29" y="22" width="6" height="3" fill="#38bdf8"/>
+  <rect x="26" y="25" width="12" height="14" fill="#0ea5e9"/>
+  <rect x="28" y="27" width="8" height="10" fill="#7dd3fc"/>
+  <rect x="30" y="29" width="4" height="6" fill="#e0f2fe"/>
+  <!-- Sparkles -->
+  <rect x="26" y="9" width="2" height="2" fill="#fde047"/>
+  <rect x="12" y="36" width="2" height="2" fill="#fde047"/>
+  <rect x="51" y="35" width="2" height="2" fill="#fde047"/>
 </svg>
