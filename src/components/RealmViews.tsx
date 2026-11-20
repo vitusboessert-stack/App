@@ -10,8 +10,6 @@ import {
   GitBranch,
   Globe,
   Home,
-  Hourglass,
-  Leaf,
   Lock,
   Map as MapIcon,
   Package,
@@ -21,7 +19,6 @@ import {
   Pin,
   Search,
   Settings,
-  ShoppingBag,
   Smartphone,
   Sparkles,
   Store,
@@ -83,6 +80,7 @@ import {
   MerlinAvatar,
   PetEggIcon,
   PetSprite,
+  SkillBadgeIcon,
 } from './PixelSprite';
 import { AnalyticsSection, SkillTreeSection, WeeklyReviewSection } from './GrowthAnalyticsViews';
 import { HomeSection, WorldMapSection } from './WorldHomeViews';
@@ -190,18 +188,16 @@ export function RealmViews(props: RealmViewsProps) {
       },
     ];
 
-    const gearShopGroup: { name: RealmSection | 'Avatar Customization'; icon: typeof Store; badge?: string }[] = [
+    const gearShopGroup: { name: RealmSection | 'Avatar Customization'; icon: typeof Store; subtitle?: string; badge?: string }[] = [
       { name: 'Equipment', icon: Swords },
       { name: 'Avatar Customization', icon: Paintbrush },
       { name: 'Pets', icon: PawPrint },
-      { name: 'Market', icon: Store },
-      { name: 'Customization Shop', icon: ShoppingBag },
       {
-        name: 'Seasonal Shop',
-        icon: Leaf,
-        badge: activeSeason === 'christmas' ? (lang === 'de' ? 'Weihnachten' : 'Christmas') : 'Fall / Halloween',
+        name: 'Market',
+        icon: Store,
+        subtitle: lang === 'de' ? 'Ausrüstung · Truhen · Kosmetik · Saisonales' : 'Gear · Chests · Cosmetics · Seasonal · Time Vault',
+        badge: activeSeason === 'christmas' ? (lang === 'de' ? 'Winter-Event' : 'Winter Event') : (lang === 'de' ? 'Herbst-Event' : 'Fall Event'),
       },
-      { name: 'Time Traveler Shop', icon: Hourglass },
     ];
 
     const handleRowClick = (name: RealmSection | 'Avatar Customization') => {
@@ -415,22 +411,8 @@ export function RealmViews(props: RealmViewsProps) {
           onBuy={props.onBuyItem}
           onBuyQuestItem={props.onBuyQuestItem}
           onEquipItem={props.onEquipItem}
-        />
-      )}
-      {section === 'Seasonal Shop' && (
-        <SeasonalShopSection
-          save={save}
-          onBuyItem={props.onBuyItem}
           onBuyCosmetic={props.onBuyCosmetic}
           onActivateCosmetic={props.onActivateCosmetic}
-        />
-      )}
-      {(section === 'Customization Shop' || section === 'Time Traveler Shop') && (
-        <CosmeticShopSection
-          save={save}
-          shop={section}
-          onBuy={props.onBuyCosmetic}
-          onActivate={props.onActivateCosmetic}
         />
       )}
       {section === 'Achievements' && <AchievementsSection save={save} />}
@@ -553,16 +535,30 @@ function SkillsSection({
             key={name}
             className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-[#18181b] p-4"
           >
-            <div>
-              <p className="font-semibold text-[#f5f5f7]">{name}</p>
-              <p className="mt-0.5 text-xs text-[#8e8e93]">{desc}</p>
-              <p className="font-mono-num mt-1 text-xs font-semibold text-[#e8b84b]">{cost} MP</p>
+            <div className="flex min-w-0 flex-1 items-center gap-3.5">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/[0.08] bg-[#111114] p-1.5">
+                <SkillBadgeIcon
+                  skillName={name}
+                  classColor={CLASS_COLORS[save.className]}
+                  locked={save.level < 10}
+                  className="h-full w-full"
+                />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-semibold text-[#f5f5f7]">{name}</p>
+                  <span className="font-mono-num rounded-md bg-[#202024] px-2 py-0.5 text-[11px] font-semibold text-[#e8b84b]">
+                    {cost} MP
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-[#8e8e93]">{desc}</p>
+              </div>
             </div>
             <button
               type="button"
               disabled={save.level < 10 || save.mp < cost}
               onClick={() => onCast(idx)}
-              className="min-h-[38px] rounded-full bg-[#f5f5f7] px-4 py-1.5 text-xs font-semibold text-[#111113] transition-colors hover:bg-white disabled:bg-[#27272c] disabled:text-[#636369]"
+              className="min-h-[40px] shrink-0 rounded-full bg-[#f5f5f7] px-4 py-1.5 text-xs font-semibold text-[#111113] transition-colors hover:bg-white disabled:bg-[#27272c] disabled:text-[#636369]"
             >
               {save.level < 10 ? 'Locked' : 'Cast Skill'}
             </button>
@@ -1515,18 +1511,24 @@ function ShopDiscountBanner({ save }: { save: HeroSave }) {
   );
 }
 
+type MarketFilter = 'All' | 'Supplies' | 'Cosmetics' | 'Seasonal' | 'Time Traveler' | EquipSlot;
+
 function MarketSection({
   save,
   onBuy,
   onBuyQuestItem,
   onEquipItem,
+  onBuyCosmetic,
+  onActivateCosmetic,
 }: {
   save: HeroSave;
   onBuy: (id: string) => void;
   onBuyQuestItem: (id: string) => void;
   onEquipItem: (id: string) => void;
+  onBuyCosmetic: (id: string) => void;
+  onActivateCosmetic: (id: string) => void;
 }) {
-  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Supplies' | EquipSlot>('All');
+  const [categoryFilter, setCategoryFilter] = useState<MarketFilter>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [hideOwned, setHideOwned] = useState(false);
 
@@ -1542,6 +1544,16 @@ function MarketSection({
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
+  const activeSeason = getActiveSeason();
+  const upcomingSeason = activeSeason === 'fall' ? 'christmas' : 'fall';
+  const seasonLabel = activeSeason === 'christmas' ? 'Christmas Collection' : 'Fall / Halloween Collection';
+  const upcomingLabel =
+    upcomingSeason === 'christmas'
+      ? 'Arriving December 1 · Christmas Collection'
+      : 'Returns Next Autumn · Fall / Halloween';
+
+  const isSlotFilter = (EQUIP_SLOTS as readonly string[]).includes(categoryFilter);
+
   const filteredSupplies = QUEST_SHOP.filter((q) => {
     if (categoryFilter !== 'All' && categoryFilter !== 'Supplies') return false;
     if (!normalizedQuery) return true;
@@ -1554,14 +1566,56 @@ function MarketSection({
 
   const filteredGear = ITEMS.filter((item) => {
     if (item.seasonal) return false;
-    if (categoryFilter === 'Supplies') return false;
-    if (categoryFilter !== 'All' && item.slot !== categoryFilter) return false;
+    if (categoryFilter !== 'All' && !isSlotFilter) return false;
+    if (isSlotFilter && item.slot !== categoryFilter) return false;
     if (hideOwned && save.owned.includes(item.id)) return false;
     if (!normalizedQuery) return true;
     return (
       item.name.toLowerCase().includes(normalizedQuery) ||
       item.slot.toLowerCase().includes(normalizedQuery) ||
       item.rarity.toLowerCase().includes(normalizedQuery)
+    );
+  });
+
+  const filteredSeasonalGear = ITEMS.filter((item) => {
+    if (item.seasonal !== activeSeason) return false;
+    if (categoryFilter !== 'All' && categoryFilter !== 'Seasonal' && !isSlotFilter) return false;
+    if (isSlotFilter && item.slot !== categoryFilter) return false;
+    if (hideOwned && save.owned.includes(item.id)) return false;
+    if (!normalizedQuery) return true;
+    return (
+      item.name.toLowerCase().includes(normalizedQuery) ||
+      item.slot.toLowerCase().includes(normalizedQuery) ||
+      'seasonal'.includes(normalizedQuery)
+    );
+  });
+
+  const filteredSeasonalCosmetics = COSMETICS.filter((c) => {
+    if (c.shop !== 'Seasonal Shop' || c.seasonal !== activeSeason) return false;
+    if (categoryFilter !== 'All' && categoryFilter !== 'Seasonal' && categoryFilter !== 'Cosmetics') return false;
+    if (hideOwned && save.ownedCosmetics.includes(c.id)) return false;
+    if (!normalizedQuery) return true;
+    return (
+      c.name.toLowerCase().includes(normalizedQuery) ||
+      c.type.toLowerCase().includes(normalizedQuery) ||
+      'seasonal'.includes(normalizedQuery)
+    );
+  });
+
+  const upcomingGear = ITEMS.filter((i) => i.seasonal === upcomingSeason);
+  const upcomingCosmetics = COSMETICS.filter((c) => c.shop === 'Seasonal Shop' && c.seasonal === upcomingSeason);
+
+  const filteredStyleAndTimeCosmetics = COSMETICS.filter((c) => {
+    if (c.shop === 'Seasonal Shop') return false;
+    if (categoryFilter === 'Time Traveler' && c.shop !== 'Time Traveler Shop') return false;
+    if (categoryFilter === 'Cosmetics' && c.shop !== 'Customization Shop' && c.shop !== 'Time Traveler Shop') return false;
+    if (categoryFilter !== 'All' && categoryFilter !== 'Cosmetics' && categoryFilter !== 'Time Traveler') return false;
+    if (hideOwned && save.ownedCosmetics.includes(c.id)) return false;
+    if (!normalizedQuery) return true;
+    return (
+      c.name.toLowerCase().includes(normalizedQuery) ||
+      c.type.toLowerCase().includes(normalizedQuery) ||
+      c.shop.toLowerCase().includes(normalizedQuery)
     );
   });
 
@@ -1817,7 +1871,7 @@ function MarketSection({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search gear, chests & potions..."
+              placeholder="Search gear, chests, cosmetics & seasonal..."
               className="min-h-[38px] w-full rounded-full border border-white/[0.08] bg-[#111114] pr-4 pl-9 text-xs text-[#f5f5f7] placeholder:text-[#636369] focus:border-white/25 focus:outline-none"
             />
           </div>
@@ -1842,7 +1896,7 @@ function MarketSection({
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          {(['All', 'Supplies', ...EQUIP_SLOTS] as const).map((cat) => (
+          {(['All', 'Supplies', 'Cosmetics', 'Seasonal', 'Time Traveler', ...EQUIP_SLOTS] as const).map((cat) => (
             <button
               key={cat}
               type="button"
@@ -1897,7 +1951,7 @@ function MarketSection({
       )}
 
       {/* Armory Equipment Catalog */}
-      {categoryFilter !== 'Supplies' && (
+      {(categoryFilter === 'All' || isSlotFilter) && (
         <div className="space-y-2.5">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-sm font-semibold text-[#f5f5f7]">Armory Equipment</h2>
@@ -1970,239 +2024,230 @@ function MarketSection({
           )}
         </div>
       )}
-    </div>
-  );
-}
 
-function SeasonalShopSection({
-  save,
-  onBuyItem,
-  onBuyCosmetic,
-  onActivateCosmetic,
-}: {
-  save: HeroSave;
-  onBuyItem: (id: string) => void;
-  onBuyCosmetic: (id: string) => void;
-  onActivateCosmetic: (id: string) => void;
-}) {
-  const activeSeason = getActiveSeason();
-  const upcomingSeason = activeSeason === 'fall' ? 'christmas' : 'fall';
-  const activeGear = ITEMS.filter((i) => i.seasonal === activeSeason);
-  const upcomingGear = ITEMS.filter((i) => i.seasonal === upcomingSeason);
-  const activeCosmetics = COSMETICS.filter((c) => c.shop === 'Seasonal Shop' && c.seasonal === activeSeason);
-  const upcomingCosmetics = COSMETICS.filter((c) => c.shop === 'Seasonal Shop' && c.seasonal === upcomingSeason);
-
-  const seasonLabel = activeSeason === 'christmas' ? 'Christmas Collection' : 'Fall / Halloween Collection';
-  const upcomingLabel =
-    upcomingSeason === 'christmas'
-      ? 'Arriving December 1 · Christmas Collection'
-      : 'Returns Next Autumn · Fall / Halloween';
-
-  return (
-    <div className="space-y-5">
-      <ShopDiscountBanner save={save} />
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-[#18181b] p-4">
-        <div>
-          <p className="text-xs font-semibold text-[#e8b84b]">Active Seasonal Event</p>
-          <h2 className="text-lg font-semibold text-[#f5f5f7]">{seasonLabel}</h2>
-          <p className="mt-0.5 text-xs text-[#8e8e93]">
-            {activeSeason === 'christmas'
-              ? 'Festive holiday equipment and frosty cosmetics are available through winter.'
-              : 'Autumn & Halloween seasonal equipment is active now. Christmas collection unlocks automatically on December 1.'}
-          </p>
-        </div>
-        <p className="font-mono-num text-sm font-semibold text-[#e8b84b]">{save.gold} Gold</p>
-      </div>
-
-      <div className="space-y-2">
-        <h3 className="text-sm font-semibold text-[#f5f5f7]">Seasonal Equipment</h3>
-        {activeGear.map((item) => {
-          const owned = save.owned.includes(item.id);
-          const cost = getDiscountedCost(save, item.cost);
-          return (
-            <div key={item.id} className="flex items-center gap-3.5 rounded-2xl border border-white/[0.07] bg-[#18181b] p-3">
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#111114] p-1">
-                <GearIcon sprite={item.sprite} className="h-full w-full" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-[#f5f5f7]">{item.name}</p>
-                <p className="font-mono-num text-xs text-[#8e8e93]">
-                  {item.slot} · Seasonal ·{' '}
-                  {Object.entries(item.stats)
-                    .map(([k, v]) => `+${v} ${k.toUpperCase()}`)
-                    .join(' · ')}
-                </p>
-              </div>
-              {owned ? (
-                <span className="px-3 text-xs font-semibold text-[#30d158]">Owned</span>
-              ) : (
-                <button
-                  type="button"
-                  disabled={save.gold < cost}
-                  onClick={() => onBuyItem(item.id)}
-                  className="font-mono-num min-h-[36px] rounded-full bg-[#d4ab5a] px-4 py-1.5 text-xs font-semibold text-[#1c1508] hover:bg-[#e3ba68] disabled:bg-[#27272c] disabled:text-[#636369] whitespace-nowrap"
+      {/* Customization & Time Traveler Vault (Frames & Badges) */}
+      {filteredStyleAndTimeCosmetics.length > 0 && (
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-sm font-semibold text-[#f5f5f7]">
+              {categoryFilter === 'Time Traveler' ? 'Time Traveler Vault' : 'Style & Time Traveler Cosmetics'}
+            </h2>
+            <span className="font-mono-num text-xs text-[#8e8e93]">
+              {filteredStyleAndTimeCosmetics.length} items
+            </span>
+          </div>
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {filteredStyleAndTimeCosmetics.map((c) => {
+              const owned = save.ownedCosmetics.includes(c.id);
+              const active = save.activeCosmetics[c.type] === c.id;
+              const cost = getDiscountedCost(save, c.cost);
+              const originLabel = c.shop === 'Time Traveler Shop' ? 'Time Traveler' : 'Customization';
+              return (
+                <div
+                  key={c.id}
+                  className="flex items-center justify-between gap-3.5 rounded-2xl border border-white/[0.07] bg-[#18181b] p-3.5"
                 >
-                  {cost} Gold
-                </button>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {activeCosmetics.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-[#f5f5f7]">Seasonal Cosmetics</h3>
-          {activeCosmetics.map((c) => {
-            const owned = save.ownedCosmetics.includes(c.id);
-            const active = save.activeCosmetics[c.type] === c.id;
-            const cost = getDiscountedCost(save, c.cost);
-            return (
-              <div key={c.id} className="flex items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-[#18181b] p-4">
-                <div className="flex items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#111114] text-xl text-[#f5f5f7]">
-                    {c.icon}
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-[#f5f5f7]">{c.name}</p>
-                    <p className="text-xs text-[#8e8e93]">{c.type} · Seasonal</p>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#111114] text-xl text-[#f5f5f7]">
+                      {c.icon}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-[#f5f5f7]">{c.name}</p>
+                      <p className="truncate text-xs text-[#8e8e93]">
+                        {c.type} · {originLabel}
+                      </p>
+                    </div>
                   </div>
+                  {owned ? (
+                    <button
+                      type="button"
+                      onClick={() => onActivateCosmetic(c.id)}
+                      className={`min-h-[36px] shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold ${
+                        active
+                          ? 'bg-[#30d158] text-[#092110]'
+                          : 'border border-white/[0.08] bg-[#202024] text-[#f5f5f7] hover:bg-[#2a2a30]'
+                      }`}
+                    >
+                      {active ? 'Active' : 'Equip'}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={save.gold < cost}
+                      onClick={() => onBuyCosmetic(c.id)}
+                      className="font-mono-num min-h-[36px] shrink-0 rounded-full bg-[#d4ab5a] px-4 py-1.5 text-xs font-semibold text-[#1c1508] hover:bg-[#e3ba68] disabled:bg-[#27272c] disabled:text-[#636369]"
+                    >
+                      {cost}G
+                    </button>
+                  )}
                 </div>
-                {owned ? (
-                  <button
-                    type="button"
-                    onClick={() => onActivateCosmetic(c.id)}
-                    className={`min-h-[36px] rounded-full px-4 py-1.5 text-xs font-semibold ${
-                      active ? 'bg-[#30d158] text-[#092110]' : 'border border-white/[0.08] bg-[#202024] text-[#f5f5f7]'
-                    }`}
-                  >
-                    {active ? 'Active' : 'Equip'}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={save.gold < cost}
-                    onClick={() => onBuyCosmetic(c.id)}
-                    className="font-mono-num min-h-[36px] rounded-full bg-[#d4ab5a] px-4 py-1.5 text-xs font-semibold text-[#1c1508] disabled:bg-[#27272c] disabled:text-[#636369] whitespace-nowrap"
-                  >
-                    {cost} Gold
-                  </button>
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {/* Upcoming / Off-Season Preview */}
-      <div className="space-y-2.5 rounded-2xl border border-dashed border-white/[0.1] bg-[#18181b]/70 p-4">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-[#d1d1d6]">{upcomingLabel}</h3>
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#8e8e93]">
-            <Lock className="h-3.5 w-3.5" />
-            Preview
-          </span>
-        </div>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {upcomingGear.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 rounded-xl bg-[#202024]/80 p-2.5 opacity-80">
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#111114] p-1">
-                <GearIcon sprite={item.sprite} className="h-full w-full" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-semibold text-[#f5f5f7]">{item.name}</p>
-                <p className="font-mono-num truncate text-[11px] text-[#8e8e93]">
-                  {item.slot} ·{' '}
-                  {Object.entries(item.stats)
-                    .map(([k, v]) => `+${v} ${k.toUpperCase()}`)
-                    .join(' · ')}
+      {/* Seasonal Event Collection & Upcoming Preview */}
+      {(categoryFilter === 'All' ||
+        categoryFilter === 'Seasonal' ||
+        filteredSeasonalGear.length > 0 ||
+        filteredSeasonalCosmetics.length > 0) &&
+        categoryFilter !== 'Supplies' &&
+        categoryFilter !== 'Time Traveler' && (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/[0.08] bg-[#18181b] p-4">
+              <div>
+                <p className="text-xs font-semibold text-[#e8b84b]">Active Seasonal Event</p>
+                <h2 className="text-base font-semibold text-[#f5f5f7]">{seasonLabel}</h2>
+                <p className="mt-0.5 text-xs text-[#8e8e93]">
+                  {activeSeason === 'christmas'
+                    ? 'Festive winter gear & cosmetics are available now and also decorate your Sanctuary.'
+                    : 'Autumn & Halloween gear and cosmetics are active now. Christmas unlocks December 1.'}
                 </p>
               </div>
-              <span className="font-mono-num text-[11px] font-semibold text-[#e8b84b]">{item.cost}G</span>
-            </div>
-          ))}
-          {upcomingCosmetics.map((c) => (
-            <div key={c.id} className="flex items-center gap-3 rounded-xl bg-[#202024]/80 p-2.5 opacity-80">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#111114] text-lg text-[#f5f5f7]">
-                {c.icon}
+              <span className="font-mono-num text-xs text-[#8e8e93]">
+                {filteredSeasonalGear.length + filteredSeasonalCosmetics.length} active
               </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-semibold text-[#f5f5f7]">{c.name}</p>
-                <p className="text-[11px] text-[#8e8e93]">{c.type} · Cosmetic</p>
-              </div>
-              <span className="font-mono-num text-[11px] font-semibold text-[#e8b84b]">{c.cost}G</span>
             </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
-function CosmeticShopSection({
-  save,
-  shop,
-  onBuy,
-  onActivate,
-}: {
-  save: HeroSave;
-  shop: 'Customization Shop' | 'Time Traveler Shop';
-  onBuy: (id: string) => void;
-  onActivate: (id: string) => void;
-}) {
-  const list = COSMETICS.filter((c) => c.shop === shop);
-  return (
-    <div className="space-y-3">
-      <ShopDiscountBanner save={save} />
-      <div className="flex items-center justify-between border-b border-white/[0.07] pb-3">
-        <p className="text-sm text-[#8e8e93]">Portrait frames and pixel badges for your avatar.</p>
-        <p className="font-mono-num text-sm font-semibold text-[#e8b84b]">{save.gold} Gold</p>
-      </div>
-      {list.map((c) => {
-        const owned = save.ownedCosmetics.includes(c.id);
-        const active = save.activeCosmetics[c.type] === c.id;
-        const cost = getDiscountedCost(save, c.cost);
-        return (
-          <div key={c.id} className="flex items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-[#18181b] p-4">
-            <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#111114] text-xl text-[#f5f5f7]">
-                {c.icon}
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-[#f5f5f7]">{c.name}</p>
-                <p className="text-xs text-[#8e8e93]">{c.type} · Cosmetic</p>
+            {(filteredSeasonalGear.length > 0 || filteredSeasonalCosmetics.length > 0) && (
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                {filteredSeasonalGear.map((item) => {
+                  const owned = save.owned.includes(item.id);
+                  const equipped = save.equipped[item.slot] === item.id;
+                  const cost = getDiscountedCost(save, item.cost);
+                  return (
+                    <div key={item.id} className="flex items-center gap-3.5 rounded-2xl border border-white/[0.07] bg-[#18181b] p-3.5">
+                      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#111114] p-1">
+                        <GearIcon sprite={item.sprite} className="h-full w-full" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-[#f5f5f7]">{item.name}</p>
+                        <p className="font-mono-num truncate text-xs text-[#8e8e93]">
+                          {item.slot} · Seasonal
+                        </p>
+                        <p className="font-mono-num mt-0.5 truncate text-[11px] text-[#30d158]">
+                          {Object.entries(item.stats)
+                            .map(([k, v]) => `+${v} ${k.toUpperCase()}`)
+                            .join(' · ')}
+                        </p>
+                      </div>
+                      {owned ? (
+                        <button
+                          type="button"
+                          onClick={() => onEquipItem(item.id)}
+                          className={`min-h-[36px] shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ${
+                            equipped
+                              ? 'bg-[#30d158] text-[#092110]'
+                              : 'border border-white/[0.08] bg-[#202024] text-[#f5f5f7] hover:bg-[#2a2a30]'
+                          }`}
+                        >
+                          {equipped ? 'Equipped' : 'Equip'}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={save.gold < cost}
+                          onClick={() => onBuy(item.id)}
+                          className="font-mono-num min-h-[36px] shrink-0 rounded-full bg-[#d4ab5a] px-4 py-1.5 text-xs font-semibold text-[#1c1508] hover:bg-[#e3ba68] disabled:bg-[#27272c] disabled:text-[#636369]"
+                        >
+                          {cost}G
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {filteredSeasonalCosmetics.map((c) => {
+                  const owned = save.ownedCosmetics.includes(c.id);
+                  const active = save.activeCosmetics[c.type] === c.id;
+                  const cost = getDiscountedCost(save, c.cost);
+                  return (
+                    <div key={c.id} className="flex items-center justify-between gap-3.5 rounded-2xl border border-white/[0.07] bg-[#18181b] p-3.5">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#111114] text-xl text-[#f5f5f7]">
+                          {c.icon}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[#f5f5f7]">{c.name}</p>
+                          <p className="truncate text-xs text-[#8e8e93]">{c.type} · Seasonal</p>
+                        </div>
+                      </div>
+                      {owned ? (
+                        <button
+                          type="button"
+                          onClick={() => onActivateCosmetic(c.id)}
+                          className={`min-h-[36px] shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold ${
+                            active
+                              ? 'bg-[#30d158] text-[#092110]'
+                              : 'border border-white/[0.08] bg-[#202024] text-[#f5f5f7] hover:bg-[#2a2a30]'
+                          }`}
+                        >
+                          {active ? 'Active' : 'Equip'}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={save.gold < cost}
+                          onClick={() => onBuyCosmetic(c.id)}
+                          className="font-mono-num min-h-[36px] shrink-0 rounded-full bg-[#d4ab5a] px-4 py-1.5 text-xs font-semibold text-[#1c1508] hover:bg-[#e3ba68] disabled:bg-[#27272c] disabled:text-[#636369]"
+                        >
+                          {cost}G
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-            {owned ? (
-              <button
-                type="button"
-                onClick={() => onActivate(c.id)}
-                className={`min-h-[36px] rounded-full px-4 py-1.5 text-xs font-semibold ${
-                  active
-                    ? 'bg-[#30d158] text-[#092110]'
-                    : 'border border-white/[0.08] bg-[#202024] text-[#f5f5f7]'
-                }`}
-              >
-                {active ? 'Active' : 'Equip'}
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled={save.gold < cost}
-                onClick={() => onBuy(c.id)}
-                className="font-mono-num min-h-[36px] rounded-full bg-[#d4ab5a] px-4 py-1.5 text-xs font-semibold text-[#1c1508] disabled:bg-[#27272c] disabled:text-[#636369] whitespace-nowrap"
-              >
-                {cost} Gold
-              </button>
+            )}
+
+            {(categoryFilter === 'All' || categoryFilter === 'Seasonal') && !normalizedQuery && (
+              <div className="space-y-2.5 rounded-2xl border border-dashed border-white/[0.1] bg-[#18181b]/70 p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-[#d1d1d6]">{upcomingLabel}</h3>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#8e8e93]">
+                    <Lock className="h-3.5 w-3.5" />
+                    Preview
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {upcomingGear.map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 rounded-xl bg-[#202024]/80 p-2.5 opacity-80">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#111114] p-1">
+                        <GearIcon sprite={item.sprite} className="h-full w-full" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold text-[#f5f5f7]">{item.name}</p>
+                        <p className="font-mono-num truncate text-[11px] text-[#8e8e93]">
+                          {item.slot} ·{' '}
+                          {Object.entries(item.stats)
+                            .map(([k, v]) => `+${v} ${k.toUpperCase()}`)
+                            .join(' · ')}
+                        </p>
+                      </div>
+                      <span className="font-mono-num text-[11px] font-semibold text-[#e8b84b]">{item.cost}G</span>
+                    </div>
+                  ))}
+                  {upcomingCosmetics.map((c) => (
+                    <div key={c.id} className="flex items-center gap-3 rounded-xl bg-[#202024]/80 p-2.5 opacity-80">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#111114] text-lg text-[#f5f5f7]">
+                        {c.icon}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold text-[#f5f5f7]">{c.name}</p>
+                        <p className="text-[11px] text-[#8e8e93]">{c.type} · Cosmetic</p>
+                      </div>
+                      <span className="font-mono-num text-[11px] font-semibold text-[#e8b84b]">{c.cost}G</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
-        );
-      })}
+        )}
     </div>
   );
 }
-
-
 
 function AchievementsSection({ save }: { save: HeroSave }) {
   const onboarding = getOnboardingTasks(save);
@@ -2230,7 +2275,7 @@ function AchievementsSection({ save }: { save: HeroSave }) {
     'buy-gear': {
       badge: 'onb-gear',
       doneText: 'Purchased their first piece of equipment.',
-      todoText: 'Buy gear from Market or Seasonal Shop.',
+      todoText: 'Buy gear from the Market.',
     },
   };
   const onboardingDoneCount = onboarding.filter((t) => t.done).length;

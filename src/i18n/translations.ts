@@ -221,7 +221,7 @@ const EN: TranslationStrings = {
   roomsExpansions: 'Rooms & Expansions',
   furnitureDecor: 'Furniture & Decor',
   seasonalDecorTitle: 'Seasonal Sanctuary Decor',
-  seasonalDecorDesc: 'Seasonal items from the Seasonal Shop automatically decorate your cottage.',
+  seasonalDecorDesc: 'Seasonal items from the Market automatically decorate your cottage.',
   trophyShelf: 'Trophy Shelf',
   inspectHint: 'Tap rooms, furniture, or trophies inside the house to inspect details.',
   close: 'Close',
@@ -389,9 +389,6 @@ export function getRealmSectionTitle(section: RealmSection, lang?: AppLanguage):
     Boss: 'Raid-Boss',
     Challenges: 'Herausforderungen',
     Market: 'Marktplatz',
-    'Customization Shop': 'Stil-Laden',
-    'Seasonal Shop': 'Saison-Laden',
-    'Time Traveler Shop': 'Zeitreise-Laden',
     Achievements: 'Erfolge',
     Settings: 'Einstellungen',
   };

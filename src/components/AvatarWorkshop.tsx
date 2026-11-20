@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { Dices } from 'lucide-react';
+import { Dices, Glasses, Scissors, Shirt, User } from 'lucide-react';
 import {
   AVATAR_OPTIONS,
-  BG_NAMES,
   PALETTES,
   type AvatarConfig,
   type ClassName,
   type EquipSlot,
 } from '../types/arcana';
-import { HeroAvatar } from './PixelSprite';
+import { AvatarAttributeIcon, HeroAvatar } from './PixelSprite';
 
 interface AvatarWorkshopProps {
   avatar: AvatarConfig;
@@ -17,24 +16,63 @@ interface AvatarWorkshopProps {
   costume?: Partial<Record<EquipSlot, string>>;
   costumeMode?: boolean;
   activeCosmetics?: Partial<Record<'Frame' | 'Badge', string>>;
-  allowGearToggle?: boolean;
   onChange: (next: AvatarConfig) => void;
+  merlinSection?: React.ReactNode;
 }
 
-const SWATCH_KEYS = new Set<keyof AvatarConfig>(['skin', 'hairColor', 'eyeColor']);
+type CategoryId = 'skin' | 'body' | 'hair' | 'extras';
 
-const LABELS: Record<keyof AvatarConfig, string> = {
-  skin: 'Skin Tone',
-  hair: 'Hairstyle',
-  hairColor: 'Hair Color',
-  eyes: 'Eye Style',
-  eyeColor: 'Eye Color',
-  glasses: 'Eyewear',
-  top: 'Base Top',
-  pants: 'Base Pants',
-  accessory: 'Accessory',
-  bg: 'Biome Backdrop',
-};
+interface SubAttrDef {
+  key: keyof AvatarConfig;
+  label: string;
+  isSwatch?: boolean;
+}
+
+const CATEGORIES: {
+  id: CategoryId;
+  label: string;
+  icon: typeof User;
+  attrs: SubAttrDef[];
+}[] = [
+  {
+    id: 'skin',
+    label: 'Skin',
+    icon: User,
+    attrs: [
+      { key: 'skin', label: 'Color', isSwatch: true },
+      { key: 'eyes', label: 'Eyes' },
+      { key: 'eyeColor', label: 'Eye Color', isSwatch: true },
+    ],
+  },
+  {
+    id: 'body',
+    label: 'Body',
+    icon: Shirt,
+    attrs: [
+      { key: 'top', label: 'Shirt' },
+      { key: 'pants', label: 'Pants' },
+    ],
+  },
+  {
+    id: 'hair',
+    label: 'Hair',
+    icon: Scissors,
+    attrs: [
+      { key: 'hair', label: 'Style' },
+      { key: 'hairColor', label: 'Color', isSwatch: true },
+    ],
+  },
+  {
+    id: 'extras',
+    label: 'Extras',
+    icon: Glasses,
+    attrs: [
+      { key: 'glasses', label: 'Eyewear' },
+      { key: 'accessory', label: 'Accessory' },
+      { key: 'bg', label: 'Backdrop' },
+    ],
+  },
+];
 
 function getSwatchColor(key: keyof AvatarConfig, idx: number): string {
   if (key === 'skin') return PALETTES.skin[idx % PALETTES.skin.length];
@@ -50,154 +88,158 @@ export function AvatarWorkshop({
   costume,
   costumeMode,
   activeCosmetics,
-  allowGearToggle = false,
   onChange,
+  merlinSection,
 }: AvatarWorkshopProps) {
-  const [previewGear, setPreviewGear] = useState(allowGearToggle);
+  const [activeCategory, setActiveCategory] = useState<CategoryId>('skin');
+  const [subAttrIndex, setSubAttrIndex] = useState<Record<CategoryId, number>>({
+    skin: 0,
+    body: 0,
+    hair: 0,
+    extras: 0,
+  });
+
+  const currentCat = CATEGORIES.find((c) => c.id === activeCategory) || CATEGORIES[0];
+  const currentSub = currentCat.attrs[subAttrIndex[activeCategory] % currentCat.attrs.length];
+  const activeKey = currentSub.key;
+  const options = AVATAR_OPTIONS[activeKey];
+  const currentVal = avatar[activeKey] ?? 0;
 
   const handleRandomize = () => {
     const next: AvatarConfig = { ...avatar };
     (Object.keys(AVATAR_OPTIONS) as (keyof AvatarConfig)[]).forEach((k) => {
-      const len = AVATAR_OPTIONS[k].length;
-      next[k] = Math.floor(Math.random() * len);
+      next[k] = Math.floor(Math.random() * AVATAR_OPTIONS[k].length);
     });
     onChange(next);
   };
 
-  const stepOption = (key: keyof AvatarConfig, delta: number) => {
-    const len = AVATAR_OPTIONS[key].length;
-    onChange({
-      ...avatar,
-      [key]: (avatar[key] + delta + len) % len,
-    });
-  };
-
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-[250px_1fr] md:items-start">
-      <div className="rounded-2xl border border-[#343340] bg-[#222229] p-4 md:sticky md:top-5">
-        <HeroAvatar
-          avatar={avatar}
-          className={className}
-          equipped={equipped}
-          costume={costume}
-          costumeMode={costumeMode}
-          activeCosmetics={activeCosmetics}
-          showGear={previewGear}
-          classNameWrapper="aspect-[3/4] w-full rounded-xl border border-[#3a3947]"
-        />
-        <div className="mt-3 flex items-center justify-between gap-2 text-xs text-[#a2a2b3]">
-          <span className="font-bold text-[#f4f4f8]">Pixel Hero</span>
-          <span className="truncate">{BG_NAMES[avatar.bg % BG_NAMES.length]}</span>
-        </div>
+    <div className="mx-auto flex max-w-xl flex-col items-center">
+      {/* Top Randomize Button + Hero Preview */}
+      <button
+        type="button"
+        onClick={handleRandomize}
+        className="mb-4 inline-flex min-h-[38px] items-center gap-2 rounded-full bg-[#6d45c7] px-6 py-1.5 text-xs font-bold text-white shadow-lg shadow-[#6d45c7]/30 transition hover:bg-[#7d56d6]"
+      >
+        <Dices className="h-4 w-4" />
+        Randomize
+      </button>
 
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={handleRandomize}
-            className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-2 rounded-xl border border-[#3d3c4c] bg-[#2b2a34] px-3 py-2 text-xs font-bold text-[#f4f4f8] transition-colors hover:bg-[#363542] whitespace-nowrap"
-          >
-            <Dices className="h-4 w-4 text-[#9b7bf0]" />
-            Randomize
-          </button>
+      <HeroAvatar
+        avatar={avatar}
+        className={className}
+        equipped={equipped}
+        costume={costume}
+        costumeMode={costumeMode}
+        activeCosmetics={activeCosmetics}
+        showGear={false}
+        classNameWrapper="h-40 w-44 rounded-3xl border border-white/10 shadow-2xl"
+      />
 
-          {allowGearToggle && (
-            <button
-              type="button"
-              onClick={() => setPreviewGear((prev) => !prev)}
-              className={`min-h-[40px] rounded-xl border px-3 py-2 text-xs font-bold transition-colors whitespace-nowrap ${
-                previewGear
-                  ? 'border-[#9b7bf0] bg-[#362f4f] text-[#f4f4f8]'
-                  : 'border-[#3d3c4c] bg-[#25242e] text-[#a2a2b3]'
-              }`}
-            >
-              {previewGear ? 'Gear: On' : 'Base Outfit'}
-            </button>
-          )}
-        </div>
-      </div>
+      {/* Optional Merlin Dialogue Positioned Between Hero & Option Strip */}
+      {merlinSection && <div className="mt-5 w-full">{merlinSection}</div>}
 
-      <div className="rounded-2xl border border-[#343340] bg-[#222229] p-4 sm:p-5">
-        <div className="mb-4 border-b border-[#302f3b] pb-3">
-          <p className="text-xs font-bold text-[#9b7bf0]">Appearance Workshop</p>
-          <h2 className="mt-1 text-xl font-bold text-[#f4f4f8]">Customize Your Pixel Hero</h2>
-          <p className="mt-1 text-sm text-[#a2a2b3]">
-            Hair, eyes, and base clothing stay independent of your combat class and remain editable anytime.
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          {(Object.keys(AVATAR_OPTIONS) as (keyof AvatarConfig)[]).map((key) => {
-            const options = AVATAR_OPTIONS[key];
-            const current = avatar[key] ?? 0;
-            const isSwatch = SWATCH_KEYS.has(key);
-
+      {/* Bottom Violet Horizontal Customization Deck */}
+      <div className="mt-5 w-full overflow-hidden rounded-3xl border border-[#5f3dc4]/40 bg-[#2d1e54] shadow-2xl">
+        {/* Sub-Attribute Tabs (e.g., COLOR / EYES / EYE COLOR) */}
+        <div className="flex items-center justify-center gap-6 border-b border-white/10 px-4 pt-3">
+          {currentCat.attrs.map((attr, idx) => {
+            const isSubActive = (subAttrIndex[activeCategory] % currentCat.attrs.length) === idx;
             return (
-              <div key={key} className="border-b border-[#2e2d38] pb-4 last:border-b-0 last:pb-0">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <span className="text-sm font-bold text-[#f4f4f8]">
-                    {LABELS[key]}{' '}
-                    <span className="font-normal text-[#a2a2b3]">· {options[current]}</span>
-                  </span>
-                  <div className="flex items-center gap-2 text-xs text-[#a2a2b3]">
-                    <button
-                      type="button"
-                      onClick={() => stepOption(key, -1)}
-                      aria-label={`Previous ${LABELS[key]}`}
-                      className="grid h-8 w-8 place-items-center rounded-lg border border-[#3d3c4c] bg-[#2b2a34] text-base text-[#f4f4f8] hover:bg-[#383745]"
-                    >
-                      ‹
-                    </button>
-                    <span className="font-mono-num w-10 text-center">
-                      {current + 1}/{options.length}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => stepOption(key, 1)}
-                      aria-label={`Next ${LABELS[key]}`}
-                      className="grid h-8 w-8 place-items-center rounded-lg border border-[#3d3c4c] bg-[#2b2a34] text-base text-[#f4f4f8] hover:bg-[#383745]"
-                    >
-                      ›
-                    </button>
-                  </div>
-                </div>
+              <button
+                key={attr.key}
+                type="button"
+                onClick={() =>
+                  setSubAttrIndex((prev) => ({
+                    ...prev,
+                    [activeCategory]: idx,
+                  }))
+                }
+                className={`border-b-2 pb-2 text-[11px] font-bold tracking-wider uppercase transition-colors ${
+                  isSubActive
+                    ? 'border-[#b996ff] text-white'
+                    : 'border-transparent text-[#b8abdb]/65 hover:text-white'
+                }`}
+              >
+                {attr.label}
+              </button>
+            );
+          })}
+        </div>
 
-                <div className="arcana-scroll flex gap-2 overflow-x-auto pb-1.5">
-                  {options.map((label, idx) => {
-                    const active = current === idx;
-                    if (isSwatch) {
-                      return (
-                        <button
-                          key={label}
-                          type="button"
-                          title={label}
-                          aria-label={`${LABELS[key]}: ${label}`}
-                          onClick={() => onChange({ ...avatar, [key]: idx })}
-                          style={{ backgroundColor: getSwatchColor(key, idx) }}
-                          className={`h-9 w-9 shrink-0 rounded-lg border transition-transform ${
-                            active
-                              ? 'scale-105 border-2 border-[#ffffff] ring-2 ring-[#9b7bf0]'
-                              : 'border-[#3d3c4c] hover:scale-105'
-                          }`}
-                        />
-                      );
-                    }
-                    return (
-                      <button
-                        key={label}
-                        type="button"
-                        onClick={() => onChange({ ...avatar, [key]: idx })}
-                        className={`min-h-[38px] shrink-0 rounded-xl border px-3 py-1.5 text-xs font-bold transition-colors whitespace-nowrap ${
-                          active
-                            ? 'border-[#b9a0f8] bg-[#4e3d7a] text-[#ffffff]'
-                            : 'border-[#3a3947] bg-[#2b2a34] text-[#d3d2de] hover:bg-[#363542]'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+        {/* Horizontal Scrollable Options Strip */}
+        <div className="bg-[#3d2673] px-3 py-4">
+          <div className="arcana-scroll flex items-center gap-3 overflow-x-auto px-1 pb-1">
+            {options.map((label, idx) => {
+              const active = currentVal === idx;
+              if (currentSub.isSwatch) {
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    title={label}
+                    aria-label={`${currentSub.label}: ${label}`}
+                    onClick={() => onChange({ ...avatar, [activeKey]: idx })}
+                    className={`relative h-12 w-12 shrink-0 rounded-full p-0.5 transition-transform ${
+                      active
+                        ? 'scale-105 bg-white ring-2 ring-[#b996ff]'
+                        : 'bg-white/25 hover:scale-105 hover:bg-white/50'
+                    }`}
+                  >
+                    <span
+                      className="block h-full w-full rounded-full border border-black/25"
+                      style={{ backgroundColor: getSwatchColor(activeKey, idx) }}
+                    />
+                  </button>
+                );
+              }
+
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  title={label}
+                  onClick={() => onChange({ ...avatar, [activeKey]: idx })}
+                  className={`flex w-16 shrink-0 flex-col items-center gap-1 rounded-2xl p-1.5 transition-all ${
+                    active
+                      ? 'bg-[#6d45c7] ring-2 ring-white'
+                      : 'bg-[#2a1b4f]/90 hover:bg-[#4c3091]'
+                  }`}
+                >
+                  <div className="h-11 w-11 overflow-hidden rounded-xl bg-[#1d1438] p-1">
+                    <AvatarAttributeIcon attrKey={activeKey} value={idx} avatar={avatar} />
+                  </div>
+                  <span className="w-full truncate text-center text-[10px] font-semibold text-[#f3efff]">
+                    {label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Bottom 4 Main Attribute Category Tabs (Skin, Body, Hair, Extras) */}
+        <div className="grid grid-cols-4 bg-[#4e2d96]">
+          {CATEGORIES.map((cat) => {
+            const Icon = cat.icon;
+            const isActive = activeCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(cat.id)}
+                className={`relative flex min-h-[58px] flex-col items-center justify-center gap-1 px-2 py-2 text-[11px] font-semibold transition-colors ${
+                  isActive
+                    ? 'bg-[#5c37ad] text-white'
+                    : 'text-[#d4c7f5]/70 hover:bg-[#5633a1] hover:text-white'
+                }`}
+              >
+                {isActive && (
+                  <span className="absolute -top-1.5 h-3 w-3 rotate-45 bg-[#3d2673]" aria-hidden="true" />
+                )}
+                <Icon className="h-4.5 w-4.5" strokeWidth={1.9} />
+                <span>{cat.label}</span>
+              </button>
             );
           })}
         </div>

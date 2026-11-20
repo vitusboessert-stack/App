@@ -1019,3 +1019,203 @@ export function buildMerlinSpriteLayers(): HeroSpriteLayers {
     wispRects: wispGrid.toSvgRects(),
   };
 }
+
+export interface AvatarAttributePreview {
+  viewBox: string;
+  rects: string;
+  isEmpty?: boolean;
+}
+
+function drawGhostHeadRing(g: PixelGrid): void {
+  const ring = '#6a6978';
+  g.box(18, 15, 14, 1, ring);
+  g.box(18, 31, 14, 1, ring);
+  g.box(17, 17, 1, 13, ring);
+  g.box(32, 17, 1, 13, ring);
+}
+
+export function buildAvatarAttributePreview(
+  key: keyof AvatarConfig,
+  value: number,
+  currentAvatar: Partial<AvatarConfig> = {}
+): AvatarAttributePreview {
+  const d: AvatarConfig = { ...AVATAR_DEFAULT, ...currentAvatar, [key]: value };
+  const g = new PixelGrid(48, 64);
+
+  if ((key === 'glasses' || key === 'accessory') && value === 0) {
+    return { viewBox: '0 0 24 24', rects: '', isEmpty: true };
+  }
+
+  if (key === 'bg') {
+    drawBiomeBackground(g, d.bg);
+    return { viewBox: '0 6 48 52', rects: g.toSvgRects() };
+  }
+
+  if (key === 'skin') {
+    const skinBase = PALETTES.skin[d.skin % PALETTES.skin.length];
+    const skinShadow = shadeHex(skinBase, 0.79);
+    const skinLight = mixHex(skinBase, '#ffffff', 0.19);
+    const cheekTint = mixHex(skinBase, '#e07272', 0.22);
+    g.box(22, 32, 6, 2, skinShadow);
+    g.box(18, 15, 14, 17, skinBase);
+    g.box(20, 14, 10, 2, skinBase);
+    g.box(17, 17, 16, 13, skinBase);
+    g.box(19, 31, 12, 2, skinShadow);
+    g.box(19, 17, 9, 10, skinLight);
+    g.box(16, 22, 2, 4, skinBase);
+    g.box(20, 26, 2, 1, cheekTint);
+    g.box(30, 26, 2, 1, cheekTint);
+    g.box(26, 25, 2, 2, skinShadow);
+    g.box(24, 29, 4, 1, '#945450');
+    g.box(22, 22, 1, 3, '#f5f8ff');
+    g.box(23, 22, 1, 3, '#1c1926');
+    g.box(28, 22, 1, 3, '#f5f8ff');
+    g.box(29, 22, 1, 3, '#1c1926');
+    g.applyOutline(SPRITE_INK);
+    return { viewBox: '13 12 23 25', rects: g.toSvgRects() };
+  }
+
+  if (key === 'hair' || key === 'hairColor') {
+    const hairBase = PALETTES.hair[d.hairColor % PALETTES.hair.length];
+    const hairDark = shadeHex(hairBase, 0.64);
+    const hairLight = mixHex(hairBase, '#ffffff', 0.25);
+    const styleIdx = key === 'hairColor' ? 0 : d.hair;
+    drawBackHair(g, styleIdx, hairBase, hairDark, hairLight);
+    drawGhostHeadRing(g);
+    drawFrontHair(g, styleIdx, hairBase, hairDark, hairLight);
+    g.applyOutline(SPRITE_INK);
+    return { viewBox: '10 7 29 35', rects: g.toSvgRects() };
+  }
+
+  if (key === 'top') {
+    const topBase = PALETTES.top[d.top % PALETTES.top.length];
+    const topDark = shadeHex(topBase, 0.7);
+    const topLight = mixHex(topBase, '#ffffff', 0.22);
+    g.box(31, 35, 3, 7, topDark);
+    g.box(18, 34, 14, 12, topBase);
+    g.box(19, 35, 4, 10, topLight);
+    g.box(27, 35, 4, 10, topDark);
+    g.box(22, 34, 5, 2, '#e6dac8');
+    g.box(24, 37, 1, 5, topDark);
+    g.box(18, 44, 14, 2, '#4a382c');
+    g.box(24, 44, 3, 2, '#e3be68');
+    g.box(15, 35, 3, 6, topBase);
+    g.box(15, 35, 2, 2, mixHex(topBase, '#ffffff', 0.22));
+    g.applyOutline(SPRITE_INK);
+    return { viewBox: '12 31 25 18', rects: g.toSvgRects() };
+  }
+
+  if (key === 'pants') {
+    const pantsBase = PALETTES.pants[d.pants % PALETTES.pants.length];
+    const pantsDark = shadeHex(pantsBase, 0.72);
+    const pantsLight = mixHex(pantsBase, '#ffffff', 0.16);
+    g.box(19, 46, 5, 7, pantsBase);
+    g.box(20, 46, 2, 6, pantsLight);
+    g.box(25, 46, 5, 7, pantsDark);
+    g.box(26, 47, 2, 5, pantsBase);
+    g.box(24, 47, 1, 7, '#1d1826');
+    g.box(19, 53, 5, 5, '#4d3629');
+    g.box(19, 53, 5, 1, '#7a5c46');
+    g.box(25, 53, 5, 5, '#3b2920');
+    g.box(25, 53, 5, 1, '#634937');
+    g.applyOutline(SPRITE_INK);
+    return { viewBox: '16 44 17 16', rects: g.toSvgRects() };
+  }
+
+  if (key === 'eyes' || key === 'eyeColor') {
+    const eyeIris = PALETTES.eye[d.eyeColor % PALETTES.eye.length];
+    const hairBase = PALETTES.hair[d.hairColor % PALETTES.hair.length];
+    const hairDark = shadeHex(hairBase, 0.64);
+    const skinBase = PALETTES.skin[d.skin % PALETTES.skin.length];
+    const skinShadow = shadeHex(skinBase, 0.79);
+    const ey = d.eyes === 4 ? 23 : 22;
+    g.box(19, 18, 13, 10, skinBase);
+    g.box(22, ey - 2, 2, 1, hairDark);
+    g.box(28, ey - 2, 2, 1, hairDark);
+    if (d.eyes === 0) {
+      g.box(22, ey, 1, 3, '#f5f8ff');
+      g.box(23, ey, 1, 3, eyeIris);
+      g.set(23, ey, '#ffffff');
+      g.box(28, ey, 1, 3, '#f5f8ff');
+      g.box(29, ey, 1, 3, eyeIris);
+      g.set(29, ey, '#ffffff');
+    } else if (d.eyes === 1) {
+      g.box(22, ey, 2, 1, '#261e2e');
+      g.set(22, ey + 1, '#f5f8ff');
+      g.set(23, ey + 1, eyeIris);
+      g.box(28, ey, 2, 1, '#261e2e');
+      g.set(28, ey + 1, '#f5f8ff');
+      g.set(29, ey + 1, eyeIris);
+    } else if (d.eyes === 2) {
+      g.box(21, ey, 1, 3, '#f5f8ff');
+      g.box(22, ey, 2, 3, eyeIris);
+      g.set(22, ey, '#ffffff');
+      g.box(27, ey, 1, 3, '#f5f8ff');
+      g.box(28, ey, 2, 3, eyeIris);
+      g.set(28, ey, '#ffffff');
+    } else if (d.eyes === 3) {
+      g.set(22, ey + 1, '#f5f8ff');
+      g.box(23, ey + 1, 1, 2, eyeIris);
+      g.set(28, ey + 1, '#f5f8ff');
+      g.box(29, ey + 1, 1, 2, eyeIris);
+    } else {
+      g.box(22, ey, 2, 1, skinShadow);
+      g.box(22, ey + 1, 2, 1, eyeIris);
+      g.box(28, ey, 2, 1, skinShadow);
+      g.box(28, ey + 1, 2, 1, eyeIris);
+    }
+    g.applyOutline(SPRITE_INK);
+    return { viewBox: '18 17 15 12', rects: g.toSvgRects() };
+  }
+
+  if (key === 'glasses') {
+    drawGhostHeadRing(g);
+    const ey = 22;
+    const frameColor = ['#2a2c36', '#2a2c36', '#e0be67', '#181820'][d.glasses] || '#2a2c36';
+    g.box(21, ey - 1, 4, 4, frameColor);
+    g.box(25, ey, 2, 1, frameColor);
+    g.box(27, ey - 1, 4, 4, frameColor);
+    if (d.glasses !== 3) {
+      g.box(22, ey, 2, 2, '#b0dcf0');
+      g.box(28, ey, 2, 2, '#b0dcf0');
+    } else {
+      g.box(22, ey, 2, 2, '#222638');
+      g.box(28, ey, 2, 2, '#222638');
+    }
+    g.applyOutline(SPRITE_INK);
+    return { viewBox: '15 13 20 20', rects: g.toSvgRects() };
+  }
+
+  // Accessory
+  if (d.accessory === 1) {
+    g.poly([[17, 34], [32, 34], [35, 52], [15, 51]], '#8c435a');
+    g.line(17, 35, 16, 50, '#ba5b76', 1);
+    g.applyOutline(SPRITE_INK);
+    return { viewBox: '13 32 24 22', rects: g.toSvgRects() };
+  }
+  if (d.accessory === 2) {
+    g.box(23, 35, 5, 1, '#d9b566');
+    g.box(24, 36, 3, 3, '#f0cc69');
+    g.set(24, 36, '#fff3b8');
+    g.applyOutline(SPRITE_INK);
+    return { viewBox: '20 33 11 9', rects: g.toSvgRects() };
+  }
+  if (d.accessory === 3) {
+    g.box(18, 33, 14, 3, '#c95f55');
+    g.box(19, 34, 4, 5, '#e0796c');
+    g.applyOutline(SPRITE_INK);
+    return { viewBox: '16 31 18 11', rects: g.toSvgRects() };
+  }
+  if (d.accessory === 4) {
+    drawGhostHeadRing(g);
+    g.box(17, 18, 16, 2, '#c94964');
+    g.box(18, 18, 6, 1, '#eb718b');
+    g.applyOutline(SPRITE_INK);
+    return { viewBox: '15 13 20 20', rects: g.toSvgRects() };
+  }
+  g.line(19, 34, 29, 44, '#7d593a', 1);
+  g.box(28, 42, 4, 5, '#9c714a');
+  g.set(29, 44, '#e0ba63');
+  g.applyOutline(SPRITE_INK);
+  return { viewBox: '17 32 17 17', rects: g.toSvgRects() };
+}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Compass, Flame, Home, Lock, MapPin, Shield, Sparkles, Swords, Tag, Trophy, X } from 'lucide-react';
+import { Check, Compass, Eye, Flame, Home, Lock, MapPin, Shield, Sparkles, Swords, Tag, Trophy, X } from 'lucide-react';
 import {
   COSMETICS,
   getActiveSeason,
@@ -25,6 +25,7 @@ import {
 import { getT } from '../i18n/translations';
 import { buildHeroSpriteLayers } from '../sprites/heroSprite';
 import { buildPetSprite } from '../sprites/worldSprites';
+import { HomeFurnitureIcon, HomeRoomIcon } from './PixelSprite';
 
 function hash2d(x: number, y: number): number {
   const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
@@ -898,6 +899,9 @@ export function HomeSection({
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(save.home.houseName);
   const [focusedRoom, setFocusedRoom] = useState<HomeRoomId>('living');
+  const [studioTab, setStudioTab] = useState<'rooms' | 'decor' | 'trophies'>('rooms');
+  const [decorRoomFilter, setDecorRoomFilter] = useState<'all' | HomeRoomId>('all');
+  const [previewFurnitureId, setPreviewFurnitureId] = useState<string | null>(null);
   const [inspected, setInspected] = useState<{
     title: string;
     subtitle: string;
@@ -906,6 +910,7 @@ export function HomeSection({
   } | null>(null);
   const homeB = getHomeBonuses(save);
   const furn = new Set(save.home.furniture);
+  const hasFurn = (id: string) => furn.has(id) || previewFurnitureId === id;
   const rooms = save.home.rooms;
   const totalLevels = Object.values(rooms).reduce((a, b) => a + b, 0);
 
@@ -954,7 +959,24 @@ export function HomeSection({
     training: '#f87171',
     garden: '#5ce09e',
     trophy: '#e8b84b',
+    basement: '#c084fc',
   };
+
+  const focusedRoomDef = HOME_ROOMS.find((r) => r.id === focusedRoom) || HOME_ROOMS[0];
+  const focusedRoomLvl = rooms[focusedRoom] || 0;
+  const focusedRoomMaxed = focusedRoomLvl >= focusedRoomDef.maxLevel;
+  const focusedRoomCost = focusedRoomDef.baseCost + focusedRoomLvl * 35;
+  const focusedRoomHasDecor = HOME_FURNITURE.some((f) => f.room === focusedRoom);
+  const previewItem = previewFurnitureId
+    ? HOME_FURNITURE.find((f) => f.id === previewFurnitureId) || null
+    : null;
+  const filteredFurniture =
+    decorRoomFilter === 'all'
+      ? HOME_FURNITURE
+      : HOME_FURNITURE.filter((f) => f.room === decorRoomFilter);
+  const decorFilterRooms = HOME_ROOMS.filter((rm) =>
+    HOME_FURNITURE.some((f) => f.room === rm.id)
+  );
 
   return (
     <div className="space-y-5">
@@ -1007,7 +1029,7 @@ export function HomeSection({
         {/* Terraria / Stardew-Inspired High-Detail Pixel Sanctuary Cross-Section */}
         <div className="overflow-hidden rounded-xl border border-[#3a364d] bg-[#0e101c]">
           <svg
-            viewBox="0 0 440 224"
+            viewBox="0 0 440 282"
             className="pixel-svg h-auto w-full select-none"
             shapeRendering="crispEdges"
             aria-label="Detailed Personal Pixel Home"
@@ -1056,17 +1078,21 @@ export function HomeSection({
               </g>
             ))}
 
-            {/* Grass, Cobble & Deep Soil Foundation */}
-            <rect x="0" y="178" width="440" height="46" fill="#2b5236" />
+            {/* Grass, Cobble & Deep Subterranean Earth Strata */}
+            <rect x="0" y="178" width="440" height="104" fill="#2b5236" />
             <rect x="0" y="178" width="440" height="4" fill="#46804f" />
-            <rect x="0" y="188" width="440" height="36" fill="#3b2820" />
-            <rect x="0" y="198" width="440" height="26" fill="#2b1d17" />
-            {/* Soil pebbles & grass tufts */}
+            <rect x="0" y="188" width="440" height="94" fill="#33221b" />
+            <rect x="0" y="206" width="440" height="76" fill="#261914" />
+            <rect x="0" y="246" width="440" height="36" fill="#1b1414" />
+            {/* Soil pebbles, stone fossils & grass tufts */}
             {[14, 28, 304, 344, 396, 422].map((gx, i) => (
               <rect key={i} x={gx} y={175} width={4} height={3} fill="#5ca361" />
             ))}
-            {[22, 68, 128, 188, 258, 332, 394].map((px, i) => (
-              <rect key={i} x={px} y={194 + (i % 3) * 7} width={6} height={3} fill="#4d3d38" />
+            {[18, 328, 356, 394, 418, 12, 342, 382, 408].map((px, i) => (
+              <rect key={i} x={px} y={194 + (i % 5) * 14} width={7} height={3} fill="#4a3b38" />
+            ))}
+            {[64, 134, 212, 276, 348, 402].map((sx, i) => (
+              <rect key={`deep-${i}`} x={sx} y={258 + (i % 2) * 8} width={10} height={4} fill="#2e2b33" />
             ))}
 
             {/* Front Porch Cobble Path */}
@@ -1159,62 +1185,6 @@ export function HomeSection({
                       <rect x="95" y="61" width="4" height="4" fill="#cfeaff" />
                     </g>
                   )}
-
-                  {/* Rune-Carved Desk Furniture (Clickable for Tooltip) */}
-                  {furn.has('scholar-desk') && (
-                    <g
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFocusedRoom('library');
-                        const def = HOME_FURNITURE.find((f) => f.id === 'scholar-desk');
-                        if (def) {
-                          setInspected({
-                            title: def.name,
-                            subtitle: `Study Library · Lv.${rooms.library || 0}`,
-                            detail: def.perk,
-                            color: roomColors.library,
-                          });
-                        }
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <rect x="92" y="94" width="38" height="4" fill="#82563c" />
-                      <rect x="95" y="98" width="4" height="14" fill="#593827" />
-                      <rect x="123" y="98" width="4" height="14" fill="#593827" />
-                      {/* Open Spellbook & Glowing Lamp */}
-                      <rect x="98" y="89" width="14" height="5" fill="#f5ead0" />
-                      <rect x="104" y="89" width="2" height="5" fill="#c7b287" />
-                      <rect x="116" y="86" width="7" height="8" fill="#38bdf8" />
-                      <rect x="118" y="88" width="3" height="4" fill="#e0f7ff" />
-                    </g>
-                  )}
-
-                  {/* Brass Astrolabe Telescope Furniture (Clickable for Tooltip) */}
-                  {furn.has('star-telescope') && (
-                    <g
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFocusedRoom('library');
-                        const def = HOME_FURNITURE.find((f) => f.id === 'star-telescope');
-                        if (def) {
-                          setInspected({
-                            title: def.name,
-                            subtitle: `Study Library · Lv.${rooms.library || 0}`,
-                            detail: def.perk,
-                            color: roomColors.library,
-                          });
-                        }
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <rect x="148" y="76" width="14" height="5" fill="#e8b84b" />
-                      <rect x="145" y="74" width="5" height="5" fill="#fde68a" />
-                      <rect x="159" y="77" width="4" height="4" fill="#93c5fd" />
-                      <rect x="153" y="81" width="3" height="29" fill="#7d533c" />
-                      <rect x="147" y="106" width="4" height="6" fill="#593827" />
-                      <rect x="158" y="106" width="4" height="6" fill="#593827" />
-                    </g>
-                  )}
                 </g>
               ) : (
                 <g>
@@ -1226,6 +1196,64 @@ export function HomeSection({
                   <text x="111" y="86" textAnchor="middle" fill="#9c9cb5" fontSize="7.5" fontWeight="700">
                     Study (Locked)
                   </text>
+                </g>
+              )}
+
+              {/* Rune-Carved Desk Furniture (Owned or Live Preview) */}
+              {hasFurn('scholar-desk') && (
+                <g
+                  opacity={!furn.has('scholar-desk') ? 0.85 : 1}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFocusedRoom('library');
+                    const def = HOME_FURNITURE.find((f) => f.id === 'scholar-desk');
+                    if (def) {
+                      setInspected({
+                        title: def.name,
+                        subtitle: `Study Library · Lv.${rooms.library || 0}${!furn.has('scholar-desk') ? ' (Preview)' : ''}`,
+                        detail: def.perk,
+                        color: roomColors.library,
+                      });
+                    }
+                  }}
+                  className="cursor-pointer"
+                >
+                  <rect x="92" y="94" width="38" height="4" fill="#82563c" />
+                  <rect x="95" y="98" width="4" height="14" fill="#593827" />
+                  <rect x="123" y="98" width="4" height="14" fill="#593827" />
+                  {/* Open Spellbook & Glowing Lamp */}
+                  <rect x="98" y="89" width="14" height="5" fill="#f5ead0" />
+                  <rect x="104" y="89" width="2" height="5" fill="#c7b287" />
+                  <rect x="116" y="86" width="7" height="8" fill="#38bdf8" />
+                  <rect x="118" y="88" width="3" height="4" fill="#e0f7ff" />
+                </g>
+              )}
+
+              {/* Brass Astrolabe Telescope Furniture (Owned or Live Preview) */}
+              {hasFurn('star-telescope') && (
+                <g
+                  opacity={!furn.has('star-telescope') ? 0.85 : 1}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFocusedRoom('library');
+                    const def = HOME_FURNITURE.find((f) => f.id === 'star-telescope');
+                    if (def) {
+                      setInspected({
+                        title: def.name,
+                        subtitle: `Study Library · Lv.${rooms.library || 0}${!furn.has('star-telescope') ? ' (Preview)' : ''}`,
+                        detail: def.perk,
+                        color: roomColors.library,
+                      });
+                    }
+                  }}
+                  className="cursor-pointer"
+                >
+                  <rect x="148" y="76" width="14" height="5" fill="#e8b84b" />
+                  <rect x="145" y="74" width="5" height="5" fill="#fde68a" />
+                  <rect x="159" y="77" width="4" height="4" fill="#93c5fd" />
+                  <rect x="153" y="81" width="3" height="29" fill="#7d533c" />
+                  <rect x="147" y="106" width="4" height="6" fill="#593827" />
+                  <rect x="158" y="106" width="4" height="6" fill="#593827" />
                 </g>
               )}
             </g>
@@ -1335,8 +1363,9 @@ export function HomeSection({
               <rect x="104" y="128" width="3" height="3" fill="#fde047" />
 
               {/* Crackling Stone Hearth Furniture */}
-              {furn.has('oak-hearth') ? (
+              {hasFurn('oak-hearth') ? (
                 <g
+                  opacity={!furn.has('oak-hearth') ? 0.85 : 1}
                   onClick={(e) => {
                     e.stopPropagation();
                     setFocusedRoom('living');
@@ -1344,7 +1373,7 @@ export function HomeSection({
                     if (def) {
                       setInspected({
                         title: def.name,
-                        subtitle: `Living Hall · Lv.${rooms.living || 0}`,
+                        subtitle: `Living Hall · Lv.${rooms.living || 0}${!furn.has('oak-hearth') ? ' (Preview)' : ''}`,
                         detail: def.perk,
                         color: roomColors.living,
                       });
@@ -1379,8 +1408,9 @@ export function HomeSection({
               )}
 
               {/* Embroidered Geometric Tapestry Rug */}
-              {furn.has('woven-rug') && (
+              {hasFurn('woven-rug') && (
                 <g
+                  opacity={!furn.has('woven-rug') ? 0.85 : 1}
                   onClick={(e) => {
                     e.stopPropagation();
                     setFocusedRoom('living');
@@ -1388,7 +1418,7 @@ export function HomeSection({
                     if (def) {
                       setInspected({
                         title: def.name,
-                        subtitle: `Living Hall · Lv.${rooms.living || 0}`,
+                        subtitle: `Living Hall · Lv.${rooms.living || 0}${!furn.has('woven-rug') ? ' (Preview)' : ''}`,
                         detail: def.perk,
                         color: roomColors.living,
                       });
@@ -1467,35 +1497,6 @@ export function HomeSection({
                       <rect x={4} y={8} width={8} height={6} fill="#475569" />
                     </g>
                   )}
-
-                  {/* Sparring Automaton Furniture */}
-                  {furn.has('iron-dummy') && (
-                    <g
-                      transform="translate(260, 138)"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFocusedRoom('training');
-                        const def = HOME_FURNITURE.find((f) => f.id === 'iron-dummy');
-                        if (def) {
-                          setInspected({
-                            title: def.name,
-                            subtitle: `Training Room · Lv.${rooms.training || 0}`,
-                            detail: def.perk,
-                            color: roomColors.training,
-                          });
-                        }
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <rect x={7} y={22} width={4} height={16} fill="#63402e" />
-                      <rect x={3} y={10} width={12} height={14} fill="#c2956b" />
-                      <rect x={0} y={12} width={18} height={4} fill="#7d533c" />
-                      <rect x={5} y={1} width={8} height={9} fill="#94a3b8" />
-                      <rect x={7} y={4} width={4} height={2} fill="#1e293b" />
-                      {/* Wooden Buckler on arm */}
-                      <rect x={15} y={11} width={5} height={8} fill="#d97706" />
-                    </g>
-                  )}
                 </g>
               ) : (
                 <g>
@@ -1504,6 +1505,36 @@ export function HomeSection({
                   <text x="241" y="146" textAnchor="middle" fill="#9c9cb5" fontSize="7.5" fontWeight="700">
                     Training (Locked)
                   </text>
+                </g>
+              )}
+
+              {/* Sparring Automaton Furniture (Owned or Live Preview) */}
+              {hasFurn('iron-dummy') && (
+                <g
+                  opacity={!furn.has('iron-dummy') ? 0.85 : 1}
+                  transform="translate(260, 138)"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFocusedRoom('training');
+                    const def = HOME_FURNITURE.find((f) => f.id === 'iron-dummy');
+                    if (def) {
+                      setInspected({
+                        title: def.name,
+                        subtitle: `Training Room · Lv.${rooms.training || 0}${!furn.has('iron-dummy') ? ' (Preview)' : ''}`,
+                        detail: def.perk,
+                        color: roomColors.training,
+                      });
+                    }
+                  }}
+                  className="cursor-pointer"
+                >
+                  <rect x={7} y={22} width={4} height={16} fill="#63402e" />
+                  <rect x={3} y={10} width={12} height={14} fill="#c2956b" />
+                  <rect x={0} y={12} width={18} height={4} fill="#7d533c" />
+                  <rect x={5} y={1} width={8} height={9} fill="#94a3b8" />
+                  <rect x={7} y={4} width={4} height={2} fill="#1e293b" />
+                  {/* Wooden Buckler on arm */}
+                  <rect x={15} y={11} width={5} height={8} fill="#d97706" />
                 </g>
               )}
             </g>
@@ -1546,35 +1577,6 @@ export function HomeSection({
                       <rect x="355" y="152" width="10" height="5" fill="#38bdf8" />
                     </g>
                   )}
-
-                  {/* Luminous Moonflower Planter Furniture */}
-                  {furn.has('moon-planter') && (
-                    <g
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFocusedRoom('garden');
-                        const def = HOME_FURNITURE.find((f) => f.id === 'moon-planter');
-                        if (def) {
-                          setInspected({
-                            title: def.name,
-                            subtitle: `Herb Garden · Lv.${rooms.garden || 0}`,
-                            detail: def.perk,
-                            color: roomColors.garden,
-                          });
-                        }
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <rect x="374" y="146" width="16" height="18" fill="#4c1d95" opacity="0.4" />
-                      <rect x="380" y="154" width="3" height="10" fill="#4ade80" />
-                      <rect x="376" y="144" width="12" height="10" fill="#a78bfa" />
-                      <rect x="379" y="146" width="6" height="6" fill="#e9d5ff" />
-                      <rect x="381" y="148" width="2" height="2" fill="#fef08a" />
-                      {/* Fireflies */}
-                      <rect x="372" y="138" width="2" height="2" fill="#fde047" />
-                      <rect x="392" y="140" width="2" height="2" fill="#67e8f9" />
-                    </g>
-                  )}
                 </g>
               ) : (
                 <g>
@@ -1584,9 +1586,183 @@ export function HomeSection({
                   </text>
                 </g>
               )}
+
+              {/* Luminous Moonflower Planter Furniture (Owned or Live Preview) */}
+              {hasFurn('moon-planter') && (
+                <g
+                  opacity={!furn.has('moon-planter') ? 0.85 : 1}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFocusedRoom('garden');
+                    const def = HOME_FURNITURE.find((f) => f.id === 'moon-planter');
+                    if (def) {
+                      setInspected({
+                        title: def.name,
+                        subtitle: `Herb Garden · Lv.${rooms.garden || 0}${!furn.has('moon-planter') ? ' (Preview)' : ''}`,
+                        detail: def.perk,
+                        color: roomColors.garden,
+                      });
+                    }
+                  }}
+                  className="cursor-pointer"
+                >
+                  <rect x="374" y="146" width="16" height="18" fill="#4c1d95" opacity="0.4" />
+                  <rect x="380" y="154" width="3" height="10" fill="#4ade80" />
+                  <rect x="376" y="144" width="12" height="10" fill="#a78bfa" />
+                  <rect x="379" y="146" width="6" height="6" fill="#e9d5ff" />
+                  <rect x="381" y="148" width="2" height="2" fill="#fef08a" />
+                  {/* Fireflies */}
+                  <rect x="372" y="138" width="2" height="2" fill="#fde047" />
+                  <rect x="392" y="140" width="2" height="2" fill="#67e8f9" />
+                </g>
+              )}
             </g>
 
-            {/* Seasonal Sanctuary Decor (Unlocked via Seasonal Shop) */}
+            {/* ================== SUBTERRANEAN: ALCHEMIST CELLAR (BASEMENT) ================== */}
+            <g onClick={() => setFocusedRoom('basement')} className="cursor-pointer">
+              {/* Heavy Stone Foundation Rim & Cellar Outer Masonry */}
+              <rect x="44" y="180" width="264" height="6" fill="#474a59" />
+              <rect x="44" y="186" width="264" height="62" fill="#1d1e29" />
+              <rect x="48" y="186" width="256" height="58" fill="#171522" />
+
+              {/* Stone Ashlar Vault Wall */}
+              {[190, 204, 218, 232].map((by, row) =>
+                [52, 84, 116, 148, 180, 212, 244, 276].map((bx) => (
+                  <rect
+                    key={`cellar-${bx}-${by}`}
+                    x={bx + (row % 2 === 0 ? 0 : 10)}
+                    y={by}
+                    width={20}
+                    height={10}
+                    fill="#211f2e"
+                  />
+                ))
+              )}
+              {/* Flagstone Cellar Floor */}
+              <rect x="48" y="240" width="256" height="4" fill="#3a3d4d" />
+
+              {/* Wooden Cellar Staircase on Left */}
+              <rect x="54" y="186" width="3" height="54" fill="#5e3e2c" />
+              {[192, 200, 208, 216, 224, 232].map((sy, idx) => (
+                <rect key={`step-${sy}`} x={56 + idx * 4} y={sy} width={10} height={3} fill="#7d533c" />
+              ))}
+
+              {(rooms.basement || 0) > 0 ? (
+                <g>
+                  {/* Warm Wall Sconces */}
+                  <rect x="94" y="200" width="3" height="10" fill="#5e3e2c" />
+                  <rect x="93" y="195" width="5" height="5" fill="#fb923c" />
+                  <rect x="94" y="196" width="3" height="3" fill="#fde047" />
+                  <rect x="284" y="200" width="3" height="10" fill="#5e3e2c" />
+                  <rect x="283" y="195" width="5" height="5" fill="#c084fc" />
+                  <rect x="284" y="196" width="3" height="3" fill="#f3e8ff" />
+
+                  {/* Glowing Elixir Shelf */}
+                  <rect x="114" y="196" width="58" height="3" fill="#6b4634" />
+                  <rect x="114" y="210" width="58" height="3" fill="#6b4634" />
+                  {/* Bottles on Top Shelf */}
+                  <rect x="118" y="189" width="5" height="7" fill="#ef4444" />
+                  <rect x="126" y="190" width="6" height="6" fill="#38bdf8" />
+                  <rect x="135" y="188" width="5" height="8" fill="#5ce09e" />
+                  <rect x="144" y="190" width="5" height="6" fill="#a855f7" />
+                  <rect x="153" y="189" width="6" height="7" fill="#fbbf24" />
+                  {/* Bottles on Lower Shelf */}
+                  <rect x="120" y="203" width="6" height="7" fill="#60a5fa" />
+                  <rect x="130" y="204" width="5" height="6" fill="#f43f5e" />
+                  <rect x="142" y="202" width="6" height="8" fill="#34d399" />
+
+                  {/* Crystal Alembic at Lv.2+ */}
+                  {(rooms.basement || 0) >= 2 && (
+                    <g>
+                      <rect x="180" y="220" width="16" height="20" fill="#4f3325" />
+                      <rect x="183" y="208" width="10" height="12" fill="#38bdf8" opacity="0.7" />
+                      <rect x="186" y="204" width="4" height="4" fill="#bae6fd" />
+                      <rect x="185" y="212" width="6" height="6" fill="#c084fc" />
+                    </g>
+                  )}
+                </g>
+              ) : (
+                <g>
+                  {/* Cobwebs & Old Cellar Crates */}
+                  <polygon points="282,186 304,186 304,208" fill="#666882" opacity="0.3" />
+                  <rect x="114" y="222" width="18" height="18" fill="#4f3728" />
+                  <rect x="116" y="224" width="14" height="14" fill="#694b38" />
+                  <rect x="138" y="226" width="14" height="14" fill="#4f3728" />
+                  <rect x="150" y="206" width="92" height="16" fill="#14121d" opacity="0.88" />
+                  <text x="196" y="217" textAnchor="middle" fill="#a7a7be" fontSize="7.5" fontWeight="700">
+                    Cellar (Locked)
+                  </text>
+                </g>
+              )}
+
+              {/* Oak Reserve Barrels Furniture (Owned or Live Preview) */}
+              {hasFurn('barrel-rack') && (
+                <g
+                  opacity={!furn.has('barrel-rack') ? 0.85 : 1}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFocusedRoom('basement');
+                    const def = HOME_FURNITURE.find((f) => f.id === 'barrel-rack');
+                    if (def) {
+                      setInspected({
+                        title: def.name,
+                        subtitle: `Alchemist Cellar · Lv.${rooms.basement || 0}${!furn.has('barrel-rack') ? ' (Preview)' : ''}`,
+                        detail: def.perk,
+                        color: roomColors.basement,
+                      });
+                    }
+                  }}
+                  className="cursor-pointer"
+                >
+                  <rect x="204" y="218" width="34" height="22" fill="#4f3325" />
+                  {/* Two Stacked Oak Barrels */}
+                  <rect x="206" y="220" width="14" height="18" fill="#7d533c" />
+                  <rect x="206" y="224" width="14" height="2" fill="#94a3b8" />
+                  <rect x="206" y="233" width="14" height="2" fill="#94a3b8" />
+                  <rect x="222" y="220" width="14" height="18" fill="#8c5e44" />
+                  <rect x="222" y="224" width="14" height="2" fill="#94a3b8" />
+                  <rect x="222" y="233" width="14" height="2" fill="#94a3b8" />
+                  <rect x="212" y="229" width="2" height="2" fill="#fbbf24" />
+                  <rect x="228" y="229" width="2" height="2" fill="#fbbf24" />
+                </g>
+              )}
+
+              {/* Bubbling Alchemy Cauldron Furniture (Owned or Live Preview) */}
+              {hasFurn('alchemy-cauldron') && (
+                <g
+                  opacity={!furn.has('alchemy-cauldron') ? 0.85 : 1}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFocusedRoom('basement');
+                    const def = HOME_FURNITURE.find((f) => f.id === 'alchemy-cauldron');
+                    if (def) {
+                      setInspected({
+                        title: def.name,
+                        subtitle: `Alchemist Cellar · Lv.${rooms.basement || 0}${!furn.has('alchemy-cauldron') ? ' (Preview)' : ''}`,
+                        detail: def.perk,
+                        color: roomColors.basement,
+                      });
+                    }
+                  }}
+                  className="cursor-pointer"
+                >
+                  {/* Ember Glow & Iron Legs */}
+                  <rect x="252" y="236" width="20" height="4" fill="#ea580c" opacity="0.85" />
+                  <rect x="256" y="237" width="12" height="3" fill="#fde047" />
+                  {/* Cauldron Pot */}
+                  <rect x="250" y="220" width="24" height="16" fill="#272936" />
+                  <rect x="248" y="218" width="28" height="4" fill="#3f4354" />
+                  {/* Glowing Potion & Bubbles */}
+                  <rect x="252" y="216" width="20" height="3" fill="#a855f7" />
+                  <rect x="256" y="215" width="10" height="2" fill="#5ce09e" />
+                  <rect x="258" y="208" width="3" height="3" fill="#c084fc" />
+                  <rect x="265" y="204" width="3" height="3" fill="#5ce09e" />
+                  <rect x="261" y="200" width="2" height="2" fill="#e9d5ff" />
+                </g>
+              )}
+            </g>
+
+            {/* Seasonal Sanctuary Decor (Unlocked via Market) */}
             {hasFallDecor && (
               <g
                 onClick={() =>
@@ -1669,6 +1845,9 @@ export function HomeSection({
             {focusedRoom === 'garden' && (
               <rect x="308" y="138" width="114" height="42" fill="none" stroke={roomColors.garden} strokeWidth="1.5" strokeDasharray="4 3" />
             )}
+            {focusedRoom === 'basement' && (
+              <rect x="48" y="186" width="256" height="58" fill="none" stroke={roomColors.basement} strokeWidth="1.5" strokeDasharray="4 3" />
+            )}
           </svg>
         </div>
 
@@ -1690,21 +1869,97 @@ export function HomeSection({
                       color: roomColors[rm.id],
                     });
                   }}
-                  className={`rounded-full px-3 py-1 text-[11px] font-semibold transition ${
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
                     active ? 'bg-[#2c2c32] text-[#f5f5f7]' : 'bg-[#202024] text-[#8e8e93] hover:text-[#e5e5ea]'
                   }`}
                   style={active ? { boxShadow: `inset 0 0 0 1px ${roomColors[rm.id]}` } : undefined}
                 >
-                  {rm.name} · Lv.{rooms[rm.id] || 0}
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: roomColors[rm.id] }}
+                  />
+                  <span>{rm.name}</span>
+                  <span className="font-mono-num text-[10px] text-[#a1a1aa]">
+                    Lv.{rooms[rm.id] || 0}
+                  </span>
                 </button>
               );
             })}
           </div>
         </div>
 
+        {/* Contextual Quick-Build / Upgrade Dock for Selected Room */}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-[#141418] p-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-[#111114] p-1">
+              <HomeRoomIcon id={focusedRoomDef.id} className="h-full w-full" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-semibold text-[#f5f5f7]">{focusedRoomDef.name}</p>
+                <span
+                  className="font-mono-num rounded-md px-1.5 py-0.5 text-[10px] font-semibold"
+                  style={{
+                    backgroundColor: `${roomColors[focusedRoomDef.id]}22`,
+                    color: roomColors[focusedRoomDef.id],
+                  }}
+                >
+                  Lv. {focusedRoomLvl}/{focusedRoomDef.maxLevel}
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs text-[#8e8e93]">{focusedRoomDef.desc}</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {focusedRoomHasDecor && (
+              <button
+                type="button"
+                onClick={() => {
+                  setStudioTab('decor');
+                  setDecorRoomFilter(focusedRoomDef.id);
+                }}
+                className="min-h-[38px] rounded-full border border-white/[0.08] bg-[#202024] px-3.5 py-1.5 text-xs font-semibold text-[#d4d4d8] transition hover:bg-[#2a2a30] hover:text-[#f5f5f7]"
+              >
+                Decor
+              </button>
+            )}
+            <button
+              type="button"
+              disabled={focusedRoomMaxed || save.gold < focusedRoomCost}
+              onClick={() => onUpgradeRoom(focusedRoomDef.id)}
+              className="font-mono-num min-h-[38px] rounded-full bg-[#f5f5f7] px-4 py-1.5 text-xs font-semibold text-[#111114] transition hover:bg-white disabled:bg-[#27272c] disabled:text-[#636369]"
+            >
+              {focusedRoomMaxed
+                ? 'Max Level'
+                : focusedRoomLvl === 0
+                  ? `Build · ${focusedRoomCost}G`
+                  : `Upgrade · ${focusedRoomCost}G`}
+            </button>
+          </div>
+        </div>
+
+        {/* Live Furniture Preview Indicator */}
+        {previewItem && (
+          <div className="mt-2.5 flex items-center justify-between gap-3 rounded-xl border border-[#eab949]/35 bg-[#eab949]/10 px-3.5 py-2 text-xs">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Eye className="h-4 w-4 shrink-0 text-[#eab949]" />
+              <p className="truncate text-[#f5f5f7]">
+                Previewing <span className="font-semibold">{previewItem.name}</span> inside your sanctuary
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPreviewFurnitureId(null)}
+              className="shrink-0 rounded-full bg-[#27272c] px-2.5 py-1 text-[11px] font-semibold text-[#f5f5f7] hover:bg-[#323238]"
+            >
+              Clear
+            </button>
+          </div>
+        )}
+
         {/* Interactive Inspection Tooltip Card */}
         {inspected ? (
-          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-[#202024] px-3.5 py-2.5">
+          <div className="mt-2.5 flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-[#202024] px-3.5 py-2.5">
             <div className="min-w-0">
               <p className="text-[11px] font-semibold" style={{ color: inspected.color }}>
                 {inspected.subtitle}
@@ -1742,116 +1997,274 @@ export function HomeSection({
         <p className="mt-3 text-xs text-[#8e8e93]">
           {t.activeHomePerks}:{' '}
           <span className="font-mono-num text-[#f5f5f7]">
-            +{homeB.bonusXpPerQuest} XP/quest · +{homeB.bonusGoldPerQuest} Gold/quest · +{homeB.bonusBossDmg} Boss DMG · +{homeB.cleanHealHp} HP clean day
+            +{homeB.bonusXpPerQuest} XP/quest · +{homeB.bonusGoldPerQuest} Gold/quest · +{homeB.bonusBossDmg} Boss DMG · +{homeB.cleanHealHp} HP{homeB.cleanHealMp > 0 ? ` · +${homeB.cleanHealMp} MP` : ''} clean day
           </span>
         </p>
       </div>
 
-      {/* Rooms */}
-      <div>
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-[#8e8e93]">{t.roomsExpansions}</h3>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {HOME_ROOMS.map((room) => {
-            const lvl = rooms[room.id] || 0;
-            const maxed = lvl >= room.maxLevel;
-            const cost = room.baseCost + lvl * 35;
-            const isSelected = focusedRoom === room.id;
-            return (
-              <div
-                key={room.id}
-                onClick={() => setFocusedRoom(room.id)}
-                className={`flex cursor-pointer flex-col justify-between rounded-2xl border p-4 transition ${
-                  isSelected ? 'border-white/20 bg-[#202024]' : 'border-white/[0.07] bg-[#18181b]'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-[#f5f5f7]">{room.name}</p>
-                    <span className="font-mono-num text-xs font-semibold text-[#eab949]">
-                      Lv. {lvl}/{room.maxLevel}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-[#8e8e93]">{room.desc}</p>
-                </div>
+      {/* Sanctuary Architect & Decor Studio */}
+      <div className="rounded-2xl border border-white/[0.07] bg-[#18181b] p-4 sm:p-5">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-1.5 rounded-full bg-[#111114] p-1">
+            {[
+              { id: 'rooms' as const, label: t.roomsExpansions, count: `${HOME_ROOMS.length}` },
+              { id: 'decor' as const, label: t.furnitureDecor, count: `${save.home.furniture.length}/${HOME_FURNITURE.length}` },
+              { id: 'trophies' as const, label: 'Trophies', count: `${save.home.trophies.length}/${Object.keys(HOME_TROPHIES).length}` },
+            ].map((tab) => {
+              const active = studioTab === tab.id;
+              return (
                 <button
+                  key={tab.id}
                   type="button"
-                  disabled={maxed || save.gold < cost}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onUpgradeRoom(room.id);
-                  }}
-                  className="font-mono-num mt-3 min-h-[38px] w-full rounded-full bg-[#f5f5f7] px-4 py-2 text-xs font-semibold text-[#111114] hover:bg-white disabled:bg-[#27272c] disabled:text-[#636369]"
+                  onClick={() => setStudioTab(tab.id)}
+                  className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                    active ? 'bg-[#f5f5f7] text-[#111114]' : 'text-[#8e8e93] hover:text-[#f5f5f7]'
+                  }`}
                 >
-                  {maxed ? 'Max Level' : lvl === 0 ? `Build · ${cost} Gold` : `Upgrade · ${cost} Gold`}
+                  {tab.label} <span className="font-mono-num opacity-75">({tab.count})</span>
                 </button>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+          <span className="font-mono-num rounded-full bg-[#202024] px-3 py-1.5 text-xs font-semibold text-[#e8b84b]">
+            {save.gold} Gold
+          </span>
         </div>
-      </div>
 
-      {/* Furniture */}
-      <div>
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-[#8e8e93]">{t.furnitureDecor}</h3>
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-          {HOME_FURNITURE.map((item) => {
-            const owned = furn.has(item.id);
-            const roomName = HOME_ROOMS.find((r) => r.id === item.room)?.name || item.room;
-            const finalCost = getDiscountedCost(save, item.cost);
-            return (
-              <div key={item.id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.07] bg-[#18181b] p-3.5">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-[#f5f5f7]">{item.name}</p>
-                  <p className="mt-0.5 text-xs text-[#8e8e93]">{item.perk}</p>
-                  <p className="mt-0.5 text-[10px] font-semibold" style={{ color: roomColors[item.room] }}>
-                    {roomName}
-                  </p>
-                </div>
-                {owned ? (
-                  <span className="shrink-0 text-xs font-semibold text-[#30d158]">Placed ✓</span>
-                ) : (
+        {/* Tab 1: Rooms & Expansions */}
+        {studioTab === 'rooms' && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {HOME_ROOMS.map((room) => {
+              const lvl = rooms[room.id] || 0;
+              const maxed = lvl >= room.maxLevel;
+              const cost = room.baseCost + lvl * 35;
+              const isSelected = focusedRoom === room.id;
+              const roomAccent = roomColors[room.id];
+              return (
+                <div
+                  key={room.id}
+                  onClick={() => setFocusedRoom(room.id)}
+                  className={`flex cursor-pointer flex-col justify-between rounded-2xl border p-4 transition ${
+                    isSelected ? 'border-white/20 bg-[#202024]' : 'border-white/[0.07] bg-[#141418] hover:border-white/15'
+                  }`}
+                >
+                  <div className="flex items-start gap-3.5">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/[0.08] bg-[#111114] p-1.5">
+                      <HomeRoomIcon id={room.id} className="h-full w-full" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-semibold text-[#f5f5f7]">{room.name}</p>
+                        <span className="font-mono-num shrink-0 text-xs font-semibold text-[#eab949]">
+                          Lv. {lvl}/{room.maxLevel}
+                        </span>
+                      </div>
+                      {/* Segmented 5-pip room level bar */}
+                      <div className="mt-1.5 flex gap-1">
+                        {Array.from({ length: room.maxLevel }).map((_, pipIdx) => (
+                          <span
+                            key={pipIdx}
+                            className="h-1.5 flex-1 rounded-full"
+                            style={{
+                              backgroundColor: pipIdx < lvl ? roomAccent : '#27272c',
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <p className="mt-2 text-xs text-[#8e8e93]">{room.desc}</p>
+                    </div>
+                  </div>
                   <button
                     type="button"
-                    disabled={save.gold < finalCost}
-                    onClick={() => onBuyFurniture(item.id)}
-                    className="font-mono-num min-h-[36px] shrink-0 rounded-full bg-[#27272c] px-3.5 py-1.5 text-xs font-semibold text-[#f5f5f7] hover:bg-[#323238] disabled:opacity-40"
+                    disabled={maxed || save.gold < cost}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFocusedRoom(room.id);
+                      onUpgradeRoom(room.id);
+                    }}
+                    className="font-mono-num mt-3.5 min-h-[40px] w-full rounded-full bg-[#f5f5f7] px-4 py-2 text-xs font-semibold text-[#111114] transition hover:bg-white disabled:bg-[#27272c] disabled:text-[#636369]"
                   >
-                    {finalCost < item.cost ? `${finalCost}G (${item.cost})` : `${item.cost} Gold`}
+                    {maxed ? 'Max Level' : lvl === 0 ? `Build · ${cost} Gold` : `Upgrade · ${cost} Gold`}
                   </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-      {/* Trophies */}
-      <div className="rounded-2xl border border-white/[0.07] bg-[#18181b] p-4">
-        <div className="mb-3 flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-[#eab949]" />
-          <h3 className="text-sm font-semibold text-[#f5f5f7]">Trophy Shelf ({save.home.trophies.length})</h3>
-        </div>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {Object.entries(HOME_TROPHIES).map(([id, tr]) => {
-            const unlocked = save.home.trophies.includes(id);
-            return (
-              <div
-                key={id}
-                className={`flex items-center gap-3 rounded-xl border p-3 ${
-                  unlocked
-                    ? 'border-[#eab949]/30 bg-[#202024]'
-                    : 'border-white/[0.04] bg-[#141418] opacity-55'
+        {/* Tab 2: Decor & Furniture (Visual Catalog + Room Filter + Live Preview) */}
+        {studioTab === 'decor' && (
+          <div className="space-y-3.5">
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => setDecorRoomFilter('all')}
+                className={`min-h-[34px] rounded-full px-3 py-1 text-xs font-semibold transition ${
+                  decorRoomFilter === 'all'
+                    ? 'bg-[#2c2c32] text-[#f5f5f7]'
+                    : 'bg-[#141418] text-[#8e8e93] hover:text-[#f5f5f7]'
                 }`}
               >
-                <Sparkles className="h-4 w-4 shrink-0" style={{ color: unlocked ? tr.color : '#636369' }} />
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-[#f5f5f7]">{tr.name}</p>
-                  <p className="text-[11px] text-[#8e8e93]">{tr.desc}</p>
+                All Rooms
+              </button>
+              {decorFilterRooms.map((rm) => {
+                const active = decorRoomFilter === rm.id;
+                return (
+                  <button
+                    key={rm.id}
+                    type="button"
+                    onClick={() => {
+                      setDecorRoomFilter(rm.id);
+                      setFocusedRoom(rm.id);
+                    }}
+                    className={`flex min-h-[34px] items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      active
+                        ? 'bg-[#2c2c32] text-[#f5f5f7]'
+                        : 'bg-[#141418] text-[#8e8e93] hover:text-[#f5f5f7]'
+                    }`}
+                    style={active ? { boxShadow: `inset 0 0 0 1px ${roomColors[rm.id]}` } : undefined}
+                  >
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: roomColors[rm.id] }} />
+                    {rm.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {filteredFurniture.map((item) => {
+                const owned = furn.has(item.id);
+                const isPreviewing = previewFurnitureId === item.id;
+                const roomDef = HOME_ROOMS.find((r) => r.id === item.room);
+                const roomName = roomDef?.name || item.room;
+                const hostRoomBuilt = (rooms[item.room] || 0) > 0;
+                const finalCost = getDiscountedCost(save, item.cost);
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => {
+                      setFocusedRoom(item.room);
+                      setInspected({
+                        title: item.name,
+                        subtitle: `${roomName} · ${owned ? 'Placed' : `${finalCost} Gold`}`,
+                        detail: item.perk,
+                        color: roomColors[item.room],
+                      });
+                    }}
+                    className={`flex cursor-pointer flex-col justify-between rounded-2xl border p-4 transition ${
+                      isPreviewing
+                        ? 'border-[#eab949]/45 bg-[#202024]'
+                        : 'border-white/[0.07] bg-[#141418] hover:border-white/15'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3.5">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/[0.08] bg-[#111114] p-1.5">
+                        <HomeFurnitureIcon id={item.id} className="h-full w-full" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-semibold text-[#f5f5f7]">{item.name}</p>
+                          {owned && (
+                            <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#30d158]/15 px-2 py-0.5 text-[11px] font-semibold text-[#30d158]">
+                              <Check className="h-3 w-3" />
+                              Placed
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-xs text-[#a1a1aa]">{item.perk}</p>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                          <span
+                            className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold"
+                            style={{
+                              backgroundColor: `${roomColors[item.room]}1c`,
+                              color: roomColors[item.room],
+                            }}
+                          >
+                            {roomName}
+                          </span>
+                          {!hostRoomBuilt && !owned && (
+                            <span className="text-[10px] font-medium text-[#8e8e93]">
+                              Build {roomName} to display
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {!owned && (
+                      <div className="mt-3.5 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFocusedRoom(item.room);
+                            setPreviewFurnitureId(isPreviewing ? null : item.id);
+                          }}
+                          className={`flex min-h-[38px] items-center justify-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition ${
+                            isPreviewing
+                              ? 'border-[#eab949]/50 bg-[#eab949]/15 text-[#eab949]'
+                              : 'border-white/[0.08] bg-[#202024] text-[#d4d4d8] hover:bg-[#2a2a30] hover:text-[#f5f5f7]'
+                          }`}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          {isPreviewing ? 'Previewing' : 'Preview'}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={save.gold < finalCost}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isPreviewing) setPreviewFurnitureId(null);
+                            setFocusedRoom(item.room);
+                            onBuyFurniture(item.id);
+                          }}
+                          className="font-mono-num min-h-[38px] flex-1 rounded-full bg-[#f5f5f7] px-4 py-1.5 text-xs font-semibold text-[#111114] transition hover:bg-white disabled:bg-[#27272c] disabled:text-[#636369]"
+                        >
+                          {finalCost < item.cost
+                            ? `Buy & Place · ${finalCost}G (${item.cost})`
+                            : `Buy & Place · ${item.cost} Gold`}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: Trophies */}
+        {studioTab === 'trophies' && (
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {Object.entries(HOME_TROPHIES).map(([id, tr]) => {
+              const unlocked = save.home.trophies.includes(id);
+              return (
+                <div
+                  key={id}
+                  className={`flex items-center gap-3 rounded-xl border p-3.5 ${
+                    unlocked
+                      ? 'border-[#eab949]/30 bg-[#202024]'
+                      : 'border-white/[0.04] bg-[#141418] opacity-55'
+                  }`}
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#111114]">
+                    {unlocked ? (
+                      <svg viewBox="0 0 12 12" className="pixel-svg h-7 w-7" shapeRendering="crispEdges" aria-hidden="true">
+                        <PixelTrophyIcon id={id} x={1} y={1} color={tr.color} />
+                      </svg>
+                    ) : (
+                      <Trophy className="h-4 w-4 text-[#636369]" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-[#f5f5f7]">{tr.name}</p>
+                    <p className="text-[11px] text-[#8e8e93]">{tr.desc}</p>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

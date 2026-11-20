@@ -7,15 +7,22 @@ import {
   type GearItem,
   type OwnedPet,
 } from '../types/arcana';
-import { buildHeroSpriteLayers, buildMerlinSpriteLayers } from '../sprites/heroSprite';
+import {
+  buildAvatarAttributePreview,
+  buildHeroSpriteLayers,
+  buildMerlinSpriteLayers,
+} from '../sprites/heroSprite';
 import {
   buildAchievementBadge,
   buildBossSprite,
   buildChallengeBadge,
+  buildHomeFurnitureIcon,
+  buildHomeRoomIcon,
   buildItemSprite,
   buildMarketSupplySprite,
   buildPetEggSprite,
   buildPetSprite,
+  buildSkillBadge,
   type AchievementBadgeId,
   type ChallengeBadgeId,
 } from '../sprites/worldSprites';
@@ -312,6 +319,112 @@ export function QuestBoardIcon({ className = '' }: { className?: string }) {
       {/* Gold Wax Seal */}
       <circle cx="19.5" cy="19" r="3.2" fill="#e8b84b" stroke="#855812" strokeWidth="1" />
       <circle cx="19.5" cy="19" r="1.4" fill="#fff3c4" />
+    </svg>
+  );
+}
+
+export function AvatarAttributeIcon({
+  attrKey,
+  value,
+  avatar,
+  className = '',
+}: {
+  attrKey: keyof AvatarConfig;
+  value: number;
+  avatar?: Partial<AvatarConfig>;
+  className?: string;
+}) {
+  const preview = useMemo(
+    () => buildAvatarAttributePreview(attrKey, value, avatar),
+    [attrKey, value, avatar]
+  );
+
+  if (preview.isEmpty) {
+    return (
+      <div
+        className={`flex h-full w-full items-center justify-center p-1.5 ${className}`}
+        aria-hidden="true"
+      >
+        <div className="h-full w-full rounded-xl border-2 border-dashed border-white/20" />
+      </div>
+    );
+  }
+
+  return (
+    <svg
+      className={`pixel-svg h-full w-full ${className}`}
+      viewBox={preview.viewBox}
+      preserveAspectRatio="xMidYMid meet"
+      aria-hidden="true"
+    >
+      <g dangerouslySetInnerHTML={{ __html: preview.rects }} />
+    </svg>
+  );
+}
+
+export function SkillBadgeIcon({
+  skillName,
+  classColor,
+  locked = false,
+  className = '',
+}: {
+  skillName: string;
+  classColor: string;
+  locked?: boolean;
+  className?: string;
+}) {
+  const icon = useMemo(
+    () => buildSkillBadge(skillName, classColor),
+    [skillName, classColor]
+  );
+
+  return (
+    <svg
+      className={`pixel-svg ${locked ? 'opacity-55 grayscale-[0.4]' : ''} ${className}`}
+      viewBox={`0 0 ${icon.width} ${icon.height}`}
+      aria-hidden="true"
+    >
+      <g dangerouslySetInnerHTML={{ __html: icon.rects }} />
+    </svg>
+  );
+}
+
+export function HomeRoomIcon({
+  id,
+  className = '',
+}: {
+  id: string;
+  className?: string;
+}) {
+  const icon = useMemo(() => buildHomeRoomIcon(id), [id]);
+
+  return (
+    <svg
+      className={`pixel-svg ${className}`}
+      viewBox={`0 0 ${icon.width} ${icon.height}`}
+      aria-hidden="true"
+    >
+      <g dangerouslySetInnerHTML={{ __html: icon.rects }} />
+    </svg>
+  );
+}
+
+export function HomeFurnitureIcon({
+  id,
+  className = '',
+}: {
+  id: string;
+  className?: string;
+}) {
+  const icon = useMemo(() => buildHomeFurnitureIcon(id), [id]);
+
+  return (
+    <svg
+      className={`pixel-svg ${className}`}
+      viewBox={`0 0 ${icon.width} ${icon.height}`}
+      aria-hidden="true"
+    >
+      <g dangerouslySetInnerHTML={{ __html: icon.rects }} />
     </svg>
   );
 }

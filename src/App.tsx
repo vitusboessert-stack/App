@@ -397,12 +397,12 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-dvh pb-24 lg:pb-12">
+    <div className="min-h-dvh pb-[calc(env(safe-area-inset-bottom)+6.5rem)] lg:pb-14">
       <OfflineIndicator lang={lang} />
 
       {/* Desktop Top Navigation — Apple Dark Glass */}
       <header className="hidden border-b border-white/[0.07] bg-[#121215]/90 backdrop-blur-xl lg:block">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-6 px-6 py-3.5">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-6 px-6 py-4">
           <button
             type="button"
             onClick={() => handleTabSwitch('habits')}
@@ -441,10 +441,10 @@ export default function App() {
         </div>
       </header>
 
-      {/* Mobile Top Header */}
+      {/* Mobile Top Header (safe-area aware for notched/Dynamic Island devices) */}
       {tab !== 'realm' && (
-        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/[0.05] bg-[#0d0d0f]/90 px-4 py-3 backdrop-blur-xl lg:hidden">
-          <div className="flex min-w-[36px] items-center">
+        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/[0.06] bg-[#0d0d0f]/92 px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3.5 backdrop-blur-xl lg:hidden">
+          <div className="flex min-w-[40px] items-center">
             <PWAInstallButton lang={lang} variant="compact" />
           </div>
 
@@ -454,14 +454,20 @@ export default function App() {
             type="button"
             onClick={handleQuickAdd}
             aria-label="Quick Add"
-            className="grid h-9 w-9 place-items-center rounded-full border border-white/[0.08] bg-[#18181b] text-[#f5f5f7] transition-colors hover:bg-[#242429]"
+            className="grid h-10 w-10 place-items-center rounded-full border border-white/[0.1] bg-[#18181b] text-[#f5f5f7] transition-colors hover:bg-[#242429]"
           >
-            <Plus className="h-4 w-4" strokeWidth={2} />
+            <Plus className="h-4 w-4" strokeWidth={2.2} />
           </button>
         </header>
       )}
 
-      <div className="mx-auto max-w-4xl space-y-6 px-4 pt-3 sm:px-6 lg:pt-6">
+      <div
+        className={`mx-auto max-w-4xl space-y-7 px-4 sm:px-6 lg:pt-8 ${
+          tab === 'realm'
+            ? 'pt-[calc(env(safe-area-inset-top)+1.25rem)]'
+            : 'pt-5'
+        }`}
+      >
         {/* Top Profile & HP / EXP / MP Header */}
         {tab !== 'realm' && (
           <section className="rounded-2xl border border-white/[0.07] bg-[#18181b] p-4 shadow-sm">
@@ -537,20 +543,20 @@ export default function App() {
         {/* Active Tab Workspace */}
         <main className="min-w-0">
           {tab === 'habits' && (
-            <section className="space-y-5">
-              <div className="hidden grid-cols-[1fr_auto_1fr] items-center gap-4 lg:grid">
-                <div aria-hidden="true" />
+            <section className="space-y-6">
+              <div className="flex flex-col items-center gap-3 py-1 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-4">
+                <div className="hidden sm:block" aria-hidden="true" />
                 <div className="text-center">
                   <h1 className="text-2xl font-semibold tracking-[-0.02em] text-[#f5f5f7]">{t.navHabits}</h1>
                   <p className="font-mono-num mt-0.5 text-xs text-[#8e8e93]">
                     {doneGoodCount}/{dueGoodCount} {t.doneToday}
                   </p>
                 </div>
-                <div className="flex justify-end">
+                <div className="flex justify-center sm:justify-end">
                   <button
                     type="button"
                     onClick={() => setModal({ type: 'habit-add' })}
-                    className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-[#f5f5f7] px-4 py-1.5 text-xs font-semibold text-[#111113] transition-colors hover:bg-white whitespace-nowrap"
+                    className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full bg-[#f5f5f7] px-5 py-2 text-xs font-semibold text-[#111113] transition-colors hover:bg-white whitespace-nowrap"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     {t.newHabit}
@@ -1093,15 +1099,15 @@ export default function App() {
           )}
 
           {tab === 'todos' && (
-            <section className="space-y-5">
-              <div className="mb-4 hidden grid-cols-[1fr_auto_1fr] items-center gap-4 lg:grid">
-                <div aria-hidden="true" />
+            <section className="space-y-6">
+              <div className="flex flex-col items-center gap-3 py-1 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-4">
+                <div className="hidden sm:block" aria-hidden="true" />
                 <h1 className="text-center text-2xl font-semibold tracking-[-0.02em] text-[#f5f5f7]">{t.navTodos}</h1>
-                <div className="flex justify-end">
+                <div className="flex justify-center sm:justify-end">
                   <button
                     type="button"
                     onClick={() => setModal({ type: 'todo-add' })}
-                    className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-[#f5f5f7] px-4 py-1.5 text-xs font-semibold text-[#111113] hover:bg-white whitespace-nowrap"
+                    className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full bg-[#f5f5f7] px-5 py-2 text-xs font-semibold text-[#111113] hover:bg-white whitespace-nowrap"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     {t.newTodo}
@@ -1318,15 +1324,15 @@ export default function App() {
           )}
 
           {tab === 'rewards' && (
-            <section className="space-y-5">
-              <div className="hidden grid-cols-[1fr_auto_1fr] items-center gap-4 lg:grid">
-                <div aria-hidden="true" />
+            <section className="space-y-6">
+              <div className="flex flex-col items-center gap-3 py-1 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-4">
+                <div className="hidden sm:block" aria-hidden="true" />
                 <h1 className="text-center text-2xl font-semibold tracking-[-0.02em] text-[#f5f5f7]">{t.navRewards}</h1>
-                <div className="flex justify-end">
+                <div className="flex justify-center sm:justify-end">
                   <button
                     type="button"
                     onClick={() => setModal({ type: 'reward-add' })}
-                    className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-[#f5f5f7] px-4 py-1.5 text-xs font-semibold text-[#111113] hover:bg-white whitespace-nowrap"
+                    className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full bg-[#f5f5f7] px-5 py-2 text-xs font-semibold text-[#111113] hover:bg-white whitespace-nowrap"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     {t.customReward}
@@ -1619,7 +1625,7 @@ export default function App() {
       </div>
 
       {/* Mobile Minimalist Floating Dock Navigation (4 clean Apple-style items) */}
-      <nav className="fixed bottom-3 left-3 right-3 z-30 mx-auto max-w-md rounded-full border border-white/[0.08] bg-[#18181b]/92 px-2 py-1.5 shadow-2xl backdrop-blur-xl lg:hidden">
+      <nav className="fixed bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-3 right-3 z-30 mx-auto max-w-md rounded-full border border-white/[0.08] bg-[#18181b]/92 px-2 py-1.5 shadow-2xl backdrop-blur-xl lg:hidden">
         <div className="grid grid-cols-4 items-center gap-1">
           {navItems.map((item) => {
             const Icon = item.icon;

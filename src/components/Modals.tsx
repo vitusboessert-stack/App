@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { ChevronLeft, Dices } from 'lucide-react';
 import {
   AVATAR_DEFAULT,
+  AVATAR_OPTIONS,
   CLASS_COLORS,
   CLASS_GLYPHS,
   CLASSES,
@@ -8,6 +10,7 @@ import {
   getPetRarityStyle,
   ITEMS,
   LIFE_DOMAINS,
+  PALETTES,
   PETS,
   PRIORITY_CONFIG,
   type AvatarConfig,
@@ -34,8 +37,7 @@ import {
   type DayResolutionSummary,
 } from '../engine/game';
 import { getDomainLabel, getT, getTimeOfDayLabel } from '../i18n/translations';
-import { AvatarWorkshop } from './AvatarWorkshop';
-import { BossSprite, GearIcon, PetSprite } from './PixelSprite';
+import { AvatarAttributeIcon, BossSprite, GearIcon, HeroAvatar, PetSprite } from './PixelSprite';
 
 export type ActiveModal =
   | { type: 'habit-add' }
@@ -708,6 +710,26 @@ function RewardFormModal({
   );
 }
 
+const GRID_ATTRIBUTES: { key: keyof AvatarConfig; label: string; isSwatch?: boolean }[] = [
+  { key: 'top', label: 'Shirt' },
+  { key: 'skin', label: 'Skin' },
+  { key: 'hairColor', label: 'Hair Color', isSwatch: true },
+  { key: 'hair', label: 'Hair Style' },
+  { key: 'eyes', label: 'Eye Style' },
+  { key: 'eyeColor', label: 'Eye Color', isSwatch: true },
+  { key: 'pants', label: 'Pants' },
+  { key: 'glasses', label: 'Eyewear' },
+  { key: 'accessory', label: 'Extras' },
+  { key: 'bg', label: 'Background' },
+];
+
+function getGridSwatchHex(key: keyof AvatarConfig, idx: number): string {
+  if (key === 'skin') return PALETTES.skin[idx % PALETTES.skin.length];
+  if (key === 'hairColor') return PALETTES.hair[idx % PALETTES.hair.length];
+  if (key === 'eyeColor') return PALETTES.eye[idx % PALETTES.eye.length];
+  return '#666';
+}
+
 function AvatarEditModal({
   save,
   onClose,
@@ -718,20 +740,169 @@ function AvatarEditModal({
   onSave: (avatar: AvatarConfig) => void;
 }) {
   const [draft, setDraft] = useState<AvatarConfig>({ ...AVATAR_DEFAULT, ...save.avatar });
+  const [selectedAttr, setSelectedAttr] = useState<keyof AvatarConfig | null>(null);
+  const [previewGear, setPreviewGear] = useState(true);
+
+  const handleRandomize = () => {
+    const next: AvatarConfig = { ...draft };
+    (Object.keys(AVATAR_OPTIONS) as (keyof AvatarConfig)[]).forEach((k) => {
+      next[k] = Math.floor(Math.random() * AVATAR_OPTIONS[k].length);
+    });
+    setDraft(next);
+  };
+
+  const activeAttrMeta = selectedAttr ? GRID_ATTRIBUTES.find((a) => a.key === selectedAttr) : null;
 
   return (
     <div>
-      <ModalHeader title="Customize Hero" onClose={onClose} />
-      <AvatarWorkshop
-        avatar={draft}
-        className={save.className}
-        equipped={save.equipped}
-        costume={save.costume}
-        costumeMode={save.costumeMode}
-        activeCosmetics={save.activeCosmetics}
-        allowGearToggle
-        onChange={setDraft}
-      />
+      {/* Top Bar: Back Button + Randomize */}
+      <div className="mb-4 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => {
+            if (selectedAttr) setSelectedAttr(null);
+            else onClose();
+          }}
+          aria-label={selectedAttr ? 'Back to attribute grid' : 'Close'}
+          className="grid h-10 w-10 place-items-center rounded-full border border-white/[0.1] bg-[#222229] text-[#f5f5f7] transition-colors hover:bg-[#2c2b35]"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+
+        <h2 className="text-sm font-semibold text-[#f5f5f7]">
+          {activeAttrMeta ? activeAttrMeta.label : 'Avatar Customization'}
+        </h2>
+
+        <button
+          type="button"
+          onClick={handleRandomize}
+          aria-label="Randomize avatar"
+          className="inline-flex h-10 items-center gap-1.5 rounded-full border border-white/[0.1] bg-[#222229] px-3.5 text-xs font-semibold text-[#f5f5f7] transition-colors hover:bg-[#2c2b35]"
+        >
+          <Dices className="h-4 w-4 text-[#9b7bf0]" />
+          <span className="hidden sm:inline">Random</span>
+        </button>
+      </div>
+
+      {/* Centered Hero Preview Card */}
+      <div className="flex justify-center">
+        <HeroAvatar
+          avatar={draft}
+          className={save.className}
+          equipped={save.equipped}
+          costume={save.costume}
+          costumeMode={save.costumeMode}
+          activeCosmetics={save.activeCosmetics}
+          showGear={previewGear}
+          classNameWrapper="h-36 w-36 rounded-2xl border border-white/[0.12] shadow-2xl"
+        />
+      </div>
+
+      {/* Dark Rounded Grid Panel */}
+      <div className="mt-5 rounded-[26px] border border-white/[0.07] bg-[#1f1e26] p-4">
+        {!selectedAttr ? (
+          <>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold text-[#f5f5f7]">Appearance</span>
+              <div className="inline-flex rounded-full bg-[#15141a] p-1">
+                <button
+                  type="button"
+                  onClick={() => setPreviewGear(true)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+                    previewGear ? 'bg-[#363540] text-white' : 'text-[#8e8e93] hover:text-white'
+                  }`}
+                >
+                  Gear
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewGear(false)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+                    !previewGear ? 'bg-[#363540] text-white' : 'text-[#8e8e93] hover:text-white'
+                  }`}
+                >
+                  Base
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+              {GRID_ATTRIBUTES.map((attr) => (
+                <button
+                  key={attr.key}
+                  type="button"
+                  onClick={() => setSelectedAttr(attr.key)}
+                  className="group flex flex-col items-center gap-1.5 text-center"
+                >
+                  <div className="aspect-square w-full overflow-hidden rounded-2xl border border-white/[0.05] bg-[#2a2933] p-2 transition-colors group-hover:border-white/20 group-hover:bg-[#33323e]">
+                    <AvatarAttributeIcon
+                      attrKey={attr.key}
+                      value={draft[attr.key]}
+                      avatar={draft}
+                    />
+                  </div>
+                  <span className="w-full truncate text-[11px] font-medium text-[#d1d1d6]">
+                    {attr.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="mb-3.5 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedAttr(null)}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[#b996ff] hover:text-white"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                All Attributes
+              </button>
+              <span className="truncate text-xs font-medium text-[#8e8e93]">
+                {AVATAR_OPTIONS[selectedAttr][draft[selectedAttr]]}
+              </span>
+            </div>
+
+            <div className="arcana-scroll grid max-h-[260px] grid-cols-3 gap-2.5 overflow-y-auto pr-1 sm:grid-cols-4">
+              {AVATAR_OPTIONS[selectedAttr].map((optLabel, idx) => {
+                const isSelected = draft[selectedAttr] === idx;
+                return (
+                  <button
+                    key={optLabel}
+                    type="button"
+                    onClick={() => setDraft({ ...draft, [selectedAttr]: idx })}
+                    className={`flex flex-col items-center gap-1.5 rounded-2xl p-2 transition-all ${
+                      isSelected
+                        ? 'bg-[#352b52] ring-2 ring-[#9b7bf0]'
+                        : 'bg-[#2a2933] hover:bg-[#33323e]'
+                    }`}
+                  >
+                    <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl bg-[#18171e] p-1.5">
+                      {activeAttrMeta?.isSwatch ? (
+                        <span
+                          className="h-9 w-9 rounded-full border border-white/20 shadow-inner"
+                          style={{ backgroundColor: getGridSwatchHex(selectedAttr, idx) }}
+                        />
+                      ) : (
+                        <AvatarAttributeIcon
+                          attrKey={selectedAttr}
+                          value={idx}
+                          avatar={draft}
+                        />
+                      )}
+                    </div>
+                    <span className="w-full truncate text-center text-[10px] font-medium text-[#e4e4ec]">
+                      {optLabel}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+
       <div className="mt-5 flex justify-end gap-2.5">
         <button
           type="button"

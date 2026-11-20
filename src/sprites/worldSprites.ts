@@ -1010,3 +1010,273 @@ export function buildMarketSupplySprite(id: string): {
   g.applyOutline(SPRITE_INK);
   return { width: 32, height: 32, rects: g.toSvgRects() };
 }
+
+export function buildSkillBadge(
+  skillName: string,
+  classColor: string
+): { width: number; height: number; rects: string } {
+  const g = new PixelGrid(24, 24);
+  const frameOuter = mixHex(classColor, '#ffffff', 0.2);
+  const frameBg = shadeHex(classColor, 0.34);
+  const frameMid = shadeHex(classColor, 0.52);
+
+  // Octagonal Arcane Skill Badge Backing
+  g.poly([[6, 2], [18, 2], [22, 6], [22, 18], [18, 22], [6, 22], [2, 18], [2, 6]], frameOuter);
+  g.poly([[7, 3], [17, 3], [21, 7], [21, 17], [17, 21], [7, 21], [3, 17], [3, 7]], frameBg);
+  g.poly([[7, 4], [17, 4], [12, 12], [4, 15], [4, 7]], frameMid);
+
+  if (skillName === 'Iron Guard') {
+    // Steel Tower Shield with Golden Rim & Cyan Guard Glow
+    g.poly([[12, 5], [18, 7], [17, 15], [12, 19], [7, 15], [6, 7]], '#cbd5e1');
+    g.poly([[12, 6], [17, 8], [16, 14], [12, 17], [8, 14], [7, 8]], '#64748b');
+    g.poly([[12, 6], [12, 17], [8, 14], [7, 8]], '#94a3b8');
+    g.box(11, 8, 2, 7, '#64d2ff');
+    g.box(9, 10, 6, 2, '#64d2ff');
+    g.set(12, 10, '#ffffff');
+    g.set(8, 8, '#facc15');
+    g.set(16, 8, '#facc15');
+  } else if (skillName === 'Valor Strike') {
+    // Radiant Broadsword & Golden Slash Shockwave
+    g.line(7, 17, 17, 7, '#e2e8f0', 2);
+    g.line(8, 16, 17, 7, '#ffffff', 1);
+    g.box(7, 14, 4, 2, '#facc15');
+    g.box(6, 16, 2, 2, '#92400e');
+    // Golden Crescent Slash Trail
+    g.line(10, 6, 17, 13, '#fde047', 1);
+    g.set(15, 6, '#ffffff');
+    g.set(18, 10, '#fde047');
+  } else if (skillName === 'Starfall') {
+    // Cosmic Falling Star & Sparkles
+    g.line(17, 6, 9, 14, '#a78bfa', 2);
+    g.line(18, 7, 11, 14, '#e0f2fe', 1);
+    g.poly([[9, 11], [12, 13], [14, 10], [13, 14], [16, 16], [12, 16], [10, 19], [9, 16], [6, 15], [9, 13]], '#fde047');
+    g.set(10, 14, '#ffffff');
+    g.set(6, 8, '#93c5fd');
+    g.set(18, 16, '#c4b5fd');
+  } else if (skillName === 'Meditation') {
+    // Glowing Mana Lotus & Arcane Crystal
+    g.poly([[12, 5], [15, 11], [12, 17], [9, 11]], '#64d2ff');
+    g.poly([[12, 6], [14, 11], [12, 16], [10, 11]], '#e0f7ff');
+    g.poly([[6, 14], [10, 13], [11, 18], [7, 18]], '#a78bfa');
+    g.poly([[18, 14], [14, 13], [13, 18], [17, 18]], '#a78bfa');
+    g.set(12, 9, '#ffffff');
+  } else if (skillName === 'Sanctuary') {
+    // Emerald Healing Cross & Radiant Drops
+    g.box(10, 6, 4, 12, '#6ee7b7');
+    g.box(6, 10, 12, 4, '#6ee7b7');
+    g.box(11, 7, 2, 10, '#ecfdf5');
+    g.box(7, 11, 10, 2, '#ecfdf5');
+    g.set(7, 7, '#fde047');
+    g.set(17, 7, '#fde047');
+  } else if (skillName === 'Guardian Light') {
+    // Golden Sun-Halo Shield
+    g.ellipse(12, 12, 5, 5, '#fde047');
+    g.ellipse(12, 12, 3, 3, '#fffbeb');
+    g.box(11, 4, 2, 3, '#f59e0b');
+    g.box(11, 17, 2, 3, '#f59e0b');
+    g.box(4, 11, 3, 2, '#f59e0b');
+    g.box(17, 11, 3, 2, '#f59e0b');
+  } else if (skillName === 'Shadow Ambush') {
+    // Twin Crossed Stealth Daggers
+    g.line(6, 17, 17, 6, '#e2e8f0', 2);
+    g.line(17, 17, 6, 6, '#cbd5e1', 2);
+    g.box(6, 15, 3, 2, '#a78bfa');
+    g.box(15, 15, 3, 2, '#a78bfa');
+    g.set(12, 8, '#f43f5e');
+  } else if (skillName === 'Lucky Hand') {
+    // Gleaming Gold Coin & Four-Point Sparkle
+    g.ellipse(12, 12, 6, 6, '#facc15');
+    g.ellipse(12, 12, 4, 4, '#ca8a04');
+    g.box(11, 9, 2, 6, '#fef08a');
+    g.set(17, 6, '#ffffff');
+    g.set(6, 17, '#fef08a');
+  } else if (skillName === 'Deadeye') {
+    // Bullseye Target Pierced by Arrow
+    g.ellipse(12, 12, 6, 6, '#f8fafc');
+    g.ellipse(12, 12, 4, 4, '#ef4444');
+    g.ellipse(12, 12, 2, 2, '#fde047');
+    g.line(18, 6, 12, 12, '#cbd5e1', 1);
+    g.set(18, 6, '#4ade80');
+    g.set(17, 5, '#4ade80');
+  } else {
+    // Steady Aim: Longbow & Drawn Arrow
+    g.poly([[9, 5], [6, 9], [6, 15], [9, 19]], '#d97706');
+    g.line(9, 6, 9, 18, '#e2e8f0', 1);
+    g.line(7, 12, 18, 12, '#facc15', 1);
+    g.poly([[16, 10], [19, 12], [16, 14]], '#e2e8f0');
+  }
+
+  g.applyOutline(SPRITE_INK);
+  return { width: 24, height: 24, rects: g.toSvgRects() };
+}
+
+export function buildHomeRoomIcon(roomId: string): {
+  width: number;
+  height: number;
+  rects: string;
+} {
+  const g = new PixelGrid(32, 32);
+
+  if (roomId === 'living') {
+    // Cozy Brick Hearth + Doorway
+    g.box(4, 6, 24, 21, '#3b2c36');
+    g.box(4, 23, 24, 4, '#704b36');
+    // Stone Fireplace
+    g.box(15, 8, 11, 16, '#64748b');
+    g.box(14, 15, 13, 2, '#94a3b8');
+    g.box(17, 17, 7, 7, '#18141c');
+    g.box(18, 19, 5, 5, '#fb923c');
+    g.box(19, 20, 3, 4, '#fde047');
+    // Oak Door
+    g.box(6, 11, 7, 13, '#6b422e');
+    g.set(11, 18, '#fbbf24');
+  } else if (roomId === 'library') {
+    // Tall Oak Bookcase & Glowing Rune Lamp
+    g.box(5, 4, 15, 23, '#5c3b28');
+    g.box(6, 5, 13, 21, '#261916');
+    for (const sy of [7, 13, 19]) {
+      g.box(6, sy + 4, 13, 2, '#7d523a');
+      g.box(7, sy, 3, 4, '#ef4444');
+      g.box(10, sy + 1, 2, 3, '#eab308');
+      g.box(13, sy, 3, 4, '#38bdf8');
+      g.box(16, sy + 1, 2, 3, '#a78bfa');
+    }
+    // Desk & Glowing Cyan Lamp
+    g.box(21, 18, 7, 9, '#7d523a');
+    g.box(23, 13, 4, 5, '#38bdf8');
+    g.set(24, 14, '#e0f7ff');
+  } else if (roomId === 'training') {
+    // Weapon Rack + Archery Bullseye
+    g.box(4, 9, 13, 17, '#5c3b28');
+    g.box(5, 10, 11, 15, '#2b201b');
+    g.box(7, 11, 2, 11, '#cbd5e1');
+    g.box(6, 20, 4, 1, '#eab308');
+    g.box(12, 13, 4, 6, '#2563eb');
+    g.box(13, 15, 2, 2, '#fbbf24');
+    // Target
+    g.ellipse(23, 16, 5, 6, '#f5e6c8');
+    g.ellipse(23, 16, 3, 4, '#dc2626');
+    g.set(23, 16, '#fde047');
+  } else if (roomId === 'garden') {
+    // Raised Planter with Herbs & Glowing Moonflower
+    g.box(4, 19, 24, 8, '#6b422e');
+    g.box(5, 19, 22, 2, '#3d281e');
+    g.box(7, 13, 5, 6, '#34d399');
+    g.box(8, 10, 3, 4, '#6ee7b7');
+    g.box(14, 11, 6, 8, '#22c55e');
+    g.set(16, 10, '#f43f5e');
+    g.box(22, 10, 5, 9, '#a78bfa');
+    g.set(24, 12, '#fef08a');
+    g.set(21, 7, '#fde047');
+  } else if (roomId === 'trophy') {
+    // Golden Chalice Trophy & Crimson Banner
+    g.box(5, 5, 8, 14, '#9f1239');
+    g.box(7, 7, 4, 7, '#facc15');
+    g.box(14, 20, 13, 3, '#7d523a');
+    g.box(17, 10, 7, 6, '#fbbf24');
+    g.box(18, 9, 5, 2, '#fef08a');
+    g.box(19, 16, 3, 4, '#d97706');
+    g.box(17, 19, 7, 2, '#fbbf24');
+  } else {
+    // Alchemist Cellar (Basement): Stone Archway + Barrel + Potion Cauldron
+    g.box(4, 6, 24, 21, '#2d293e');
+    g.box(4, 6, 24, 3, '#4e4869');
+    // Oak Barrel
+    g.box(6, 14, 8, 11, '#8c5a3c');
+    g.box(6, 16, 8, 2, '#cbd5e1');
+    g.box(6, 21, 8, 2, '#cbd5e1');
+    // Glowing Cauldron / Potion Flask
+    g.ellipse(20, 20, 5, 5, '#334155');
+    g.box(17, 15, 6, 2, '#4ade80');
+    g.set(19, 12, '#a78bfa');
+    g.set(22, 11, '#86efac');
+  }
+
+  g.applyOutline(SPRITE_INK);
+  return { width: 32, height: 32, rects: g.toSvgRects() };
+}
+
+export function buildHomeFurnitureIcon(furnitureId: string): {
+  width: number;
+  height: number;
+  rects: string;
+} {
+  const g = new PixelGrid(32, 32);
+
+  if (furnitureId === 'oak-hearth') {
+    // Brick Fireplace with Mantle & Roaring Fire
+    g.box(6, 5, 20, 22, '#64748b');
+    g.box(5, 13, 22, 3, '#94a3b8');
+    g.box(8, 7, 5, 3, '#7c869c');
+    g.box(18, 9, 5, 3, '#7c869c');
+    g.box(10, 16, 12, 11, '#140f17');
+    g.box(11, 24, 10, 3, '#5c3a28');
+    g.box(12, 19, 8, 6, '#ea580c');
+    g.box(14, 18, 4, 6, '#fde047');
+    g.set(15, 21, '#ffffff');
+  } else if (furnitureId === 'woven-rug') {
+    // Embroidered Tapestry Rug
+    g.poly([[4, 19], [9, 12], [28, 12], [24, 19]], '#b83b5e');
+    g.poly([[7, 18], [10, 13], [25, 13], [22, 18]], '#f08a5d');
+    g.poly([[12, 17], [14, 14], [20, 14], [18, 17]], '#ffe680');
+    g.box(3, 19, 21, 2, '#e2e8f0');
+  } else if (furnitureId === 'scholar-desk') {
+    // Rune-Carved Desk + Open Spellbook + Glowing Lamp
+    g.box(4, 15, 24, 3, '#82563c');
+    g.box(6, 18, 3, 9, '#593827');
+    g.box(23, 18, 3, 9, '#593827');
+    g.box(8, 11, 9, 4, '#f5ead0');
+    g.box(12, 11, 1, 4, '#c7b287');
+    g.box(20, 9, 5, 6, '#38bdf8');
+    g.box(21, 10, 3, 4, '#e0f7ff');
+  } else if (furnitureId === 'star-telescope') {
+    // Brass Astrolabe Telescope on Tripod
+    g.line(16, 14, 10, 26, '#7d533c', 2);
+    g.line(16, 14, 22, 26, '#7d533c', 2);
+    g.line(16, 14, 16, 26, '#593827', 2);
+    g.line(9, 14, 22, 8, '#e8b84b', 4);
+    g.box(20, 6, 4, 4, '#93c5fd');
+    g.set(21, 7, '#ffffff');
+  } else if (furnitureId === 'iron-dummy') {
+    // Sparring Automaton with Steel Helm & Buckler
+    g.box(14, 20, 4, 7, '#63402e');
+    g.box(10, 25, 12, 2, '#4a2f21');
+    g.box(10, 12, 12, 9, '#c2956b');
+    g.box(7, 13, 18, 3, '#7d533c');
+    g.box(12, 5, 8, 7, '#94a3b8');
+    g.box(14, 7, 4, 2, '#1e293b');
+    g.box(22, 12, 4, 7, '#d97706');
+  } else if (furnitureId === 'moon-planter') {
+    // Luminous Moonflower Planter with Fireflies
+    g.box(11, 19, 10, 7, '#7c4d35');
+    g.box(10, 18, 12, 2, '#9c6447');
+    g.box(15, 12, 2, 7, '#4ade80');
+    g.ellipse(16, 10, 5, 4, '#a78bfa');
+    g.ellipse(16, 10, 3, 2, '#e9d5ff');
+    g.set(16, 10, '#fef08a');
+    g.set(8, 8, '#fde047');
+    g.set(24, 9, '#67e8f9');
+  } else if (furnitureId === 'barrel-rack') {
+    // Oak Reserve Barrels
+    g.box(6, 16, 9, 10, '#8c5a3c');
+    g.box(17, 16, 9, 10, '#784b31');
+    g.box(11, 8, 10, 9, '#a36b48');
+    g.box(6, 18, 9, 1, '#cbd5e1');
+    g.box(17, 18, 9, 1, '#cbd5e1');
+    g.box(11, 10, 10, 1, '#e8b84b');
+    g.box(11, 14, 10, 1, '#e8b84b');
+  } else {
+    // Bubbling Alchemy Cauldron
+    g.ellipse(16, 19, 7, 6, '#334155');
+    g.box(10, 13, 12, 2, '#475569');
+    g.box(11, 12, 10, 2, '#4ade80');
+    g.box(12, 25, 8, 2, '#ea580c');
+    g.set(14, 25, '#fde047');
+    g.set(13, 8, '#a78bfa');
+    g.set(18, 6, '#86efac');
+    g.set(16, 10, '#67e8f9');
+  }
+
+  g.applyOutline(SPRITE_INK);
+  return { width: 32, height: 32, rects: g.toSvgRects() };
+}

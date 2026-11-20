@@ -33,8 +33,11 @@ import {
   computeAnalytics,
   DOMAIN_XP_PER_LEVEL,
   getWeeklyReviewSummary,
+  inferDomain,
+  today,
 } from '../engine/game';
 import { buildHeroSpriteLayers } from '../sprites/heroSprite';
+import { mixHex } from '../sprites/PixelGrid';
 
 const DOMAIN_ICONS: Record<LifeDomain, typeof BookOpen> = {
   Knowledge: BookOpen,
@@ -614,17 +617,76 @@ export function SkillTreeSection({
   );
 }
 
+const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function toLocalIso(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function buildHeatmapMatrix(weeksCount = 20): {
+  columns: { dates: string[]; monthLabel: string | null }[];
+  todayStr: string;
+} {
+  const todayStr = today();
+  const now = new Date();
+  now.setHours(12, 0, 0, 0);
+  // Monday-first index: Mon=0 .. Sun=6
+  const dayOfWeek = (now.getDay() + 6) % 7;
+  const currentMonday = new Date(now);
+  currentMonday.setDate(now.getDate() - dayOfWeek);
+
+  const startMonday = new Date(currentMonday);
+  startMonday.setDate(currentMonday.getDate() - (weeksCount - 1) * 7);
+
+  const columns: { dates: string[]; monthLabel: string | null }[] = [];
+  let lastLabeledCol = -3;
+  let prevMonth = -1;
+
+  for (let w = 0; w < weeksCount; w++) {
+    const colDates: string[] = [];
+    let labelMonth: number | null = null;
+    for (let r = 0; r < 7; r++) {
+      const cell = new Date(startMonday);
+      cell.setDate(startMonday.getDate() + w * 7 + r);
+      colDates.push(toLocalIso(cell));
+      if (cell.getDate() === 1) {
+        labelMonth = cell.getMonth();
+      }
+    }
+    const firstDate = new Date(startMonday);
+    firstDate.setDate(startMonday.getDate() + w * 7);
+    const firstMonth = firstDate.getMonth();
+    if (w === 0) {
+      labelMonth = firstMonth;
+    } else if (labelMonth === null && firstMonth !== prevMonth) {
+      labelMonth = firstMonth;
+    }
+    prevMonth = firstMonth;
+
+    let monthLabel: string | null = null;
+    if (labelMonth !== null && w - lastLabeledCol >= 2) {
+      monthLabel = SHORT_MONTHS[labelMonth];
+      lastLabeledCol = w;
+    }
+    columns.push({ dates: colDates, monthLabel });
+  }
+
+  return { columns, todayStr };
+}
+
 export function AnalyticsSection({ save }: { save: HeroSave }) {
   const [period, setPeriod] = useState<'week' | 'month'>('week');
   const report = computeAnalytics(save, period);
-
-  const heatColors = ['#141417', '#1f362a', '#245e40', '#2b8a58', '#30d158'];
+  const { columns, todayStr } = useMemo(() => buildHeatmapMatrix(20), []);
 
   return (
     <div className="space-y-4">
       {/* Period Switch */}
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs text-[#8e8e93]">Consistency, XP gains, and habit performance.</p>
+        <p className="text-xs text-[#8e8e93]">Consistency, XP gains, and per-habit heatmaps.</p>
         <div className="flex items-center gap-1 rounded-full border border-white/[0.07] bg-[#18181b] p-1">
           {(['week', 'month'] as const).map((p) => (
             <button
@@ -671,35 +733,140 @@ export function AnalyticsSection({ save }: { save: HeroSave }) {
         </div>
       </div>
 
-      {/* Habit Heatmap (Last 35 Days) */}
-      <div className="rounded-2xl border border-white/[0.07] bg-[#18181b] p-5">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-[#f5f5f7]">35-Day Activity Heatmap</h3>
-          <div className="flex items-center gap-1.5 text-[11px] text-[#8e8e93]">
-            <span>Less</span>
-            {heatColors.map((c) => (
-              <span
-                key={c}
-                className="inline-block h-3 w-3 rounded-[3px]"
-                style={{ backgroundColor: c }}
-              />
-            ))}
-            <span>More</span>
-          </div>
-        </div>
+      {/* Per-Habit Consistency Heatmaps */}
+      <div className="space-y-3">
+        {save.habits.length > 0 ? (
+          save.habits.map((habit) => {
+            const domain = habit.domain || inferDomain(habit.title);
+            const meta = DOMAIN_META[domain];
+            const DomainIcon = DOMAIN_ICONS[domain];
+            const isBad = habit.kind === 'bad';
+            const accent = isBad ? '#ff453a' : meta.color;
+            const doneSet = new Set(habit.doneDates);
+            const slipSet = new Set(habit.slips);
+            const doneToday = isBad ? !slipSet.has(todayStr) : doneSet.has(todayStr);
+            const emptyTint = mixHex('#1e1e24', accent, 0.13);
+            const cardBg = mixHex('#16161a', accent, 0.04);
 
-        <div className="grid grid-cols-7 gap-2">
-          {report.heatmap.map((cell) => (
-            <div
-              key={cell.date}
-              title={`${cell.date}: ${cell.count} actions`}
-              className="flex aspect-square flex-col items-center justify-center rounded-lg border border-white/[0.04] text-[10px]"
-              style={{ backgroundColor: heatColors[cell.level] }}
-            >
-              <span className="font-mono-num text-[#d4d4d8]/80">{cell.date.slice(8)}</span>
-            </div>
-          ))}
-        </div>
+            return (
+              <div
+                key={habit.id}
+                style={{ backgroundColor: cardBg }}
+                className="rounded-[24px] border border-white/[0.08] p-4 sm:p-5"
+              >
+                {/* Card Header: Domain Icon + Habit Title + Status Check Box */}
+                <div className="mb-3.5 flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-xl"
+                      style={{ backgroundColor: `${accent}20`, color: accent }}
+                    >
+                      <DomainIcon className="h-4.5 w-4.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="truncate text-[15px] font-semibold text-[#f5f5f7]">
+                        {habit.title}
+                      </h3>
+                      <p className="font-mono-num text-[11px] text-[#8e8e93]">
+                        {isBad
+                          ? `${habit.slips.length} slips · Avoid`
+                          : `Streak ${habit.streak}d · ${habit.doneDates.length} check-offs`}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    aria-label={doneToday ? 'Completed today' : 'Pending today'}
+                    style={{
+                      borderColor: doneToday ? accent : `${accent}66`,
+                      backgroundColor: doneToday ? `${accent}2b` : 'rgba(17, 17, 20, 0.45)',
+                      color: doneToday ? accent : '#6e6e78',
+                    }}
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-2 transition-colors"
+                  >
+                    <Check className="h-5 w-5" strokeWidth={2.5} />
+                  </div>
+                </div>
+
+                {/* Multi-Month Contribution Heatmap Matrix */}
+                <div className="flex gap-2">
+                  {/* Weekday Labels Column (aligned with rows 0..6, showing Tue/Thu/Sat) */}
+                  <div className="flex shrink-0 flex-col pt-5">
+                    <div className="grid flex-1 grid-rows-7 gap-[3px] text-[10px] leading-none text-[#8e8e93]">
+                      <span />
+                      <span className="flex items-center">Tue</span>
+                      <span />
+                      <span className="flex items-center">Thu</span>
+                      <span />
+                      <span className="flex items-center">Sat</span>
+                      <span />
+                    </div>
+                  </div>
+
+                  {/* 20-Week Grid */}
+                  <div className="min-w-0 flex-1">
+                    {/* Month Labels Row */}
+                    <div className="mb-1.5 grid grid-cols-20 gap-[3px]">
+                      {columns.map((col, idx) => (
+                        <div key={idx} className="relative h-3.5">
+                          {col.monthLabel && (
+                            <span className="absolute top-0 left-0 whitespace-nowrap text-[10px] font-medium text-[#8e8e93]">
+                              {col.monthLabel}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* 20 Columns × 7 Rows */}
+                    <div className="grid grid-cols-20 gap-[3px]">
+                      {columns.map((col, colIdx) => (
+                        <div key={colIdx} className="grid grid-rows-7 gap-[3px]">
+                          {col.dates.map((dateStr) => {
+                            const isFuture = dateStr > todayStr;
+                            const isToday = dateStr === todayStr;
+                            if (isFuture) {
+                              return <div key={dateStr} className="aspect-square rounded-[3px] opacity-0" />;
+                            }
+                            let cellColor = emptyTint;
+                            let stateLabel = 'Missed';
+                            if (isBad) {
+                              if (slipSet.has(dateStr)) {
+                                cellColor = '#ff453a';
+                                stateLabel = 'Slip';
+                              } else if (dateStr >= habit.createdDate) {
+                                cellColor = mixHex('#1e1e24', '#30d158', 0.4);
+                                stateLabel = 'Clean';
+                              }
+                            } else if (doneSet.has(dateStr)) {
+                              cellColor = accent;
+                              stateLabel = 'Done';
+                            }
+
+                            return (
+                              <div
+                                key={dateStr}
+                                title={`${dateStr}: ${stateLabel}`}
+                                style={{ backgroundColor: cellColor }}
+                                className={`aspect-square rounded-[3px] transition-colors ${
+                                  isToday ? 'ring-[1.5px] ring-white' : ''
+                                }`}
+                              />
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="rounded-2xl border border-dashed border-white/[0.08] bg-[#18181b] p-6 text-center text-xs text-[#8e8e93]">
+            Create a habit first to see its multi-month consistency heatmap here.
+          </div>
+        )}
       </div>
 
       {/* Strongest & Weakest Habits */}

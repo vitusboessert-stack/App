@@ -33,9 +33,6 @@ export type RealmSection =
   | 'Boss'
   | 'Challenges'
   | 'Market'
-  | 'Customization Shop'
-  | 'Seasonal Shop'
-  | 'Time Traveler Shop'
   | 'Achievements'
   | 'Settings';
 
@@ -306,7 +303,7 @@ export interface WeeklyBossState {
   affinityDomain?: LifeDomain;
 }
 
-export type HomeRoomId = 'living' | 'library' | 'training' | 'garden' | 'trophy';
+export type HomeRoomId = 'living' | 'library' | 'training' | 'garden' | 'trophy' | 'basement';
 
 export interface HomeState {
   houseName: string;
@@ -1071,6 +1068,7 @@ export const HOME_ROOMS: {
   { id: 'training', name: 'Training Room', desc: '+1 STR & +2 Boss DMG per level', baseCost: 45, maxLevel: 5 },
   { id: 'garden', name: 'Herb Garden', desc: 'Restore +1 HP on clean day rollover per level', baseCost: 35, maxLevel: 5 },
   { id: 'trophy', name: 'Trophy Alcove', desc: '+1 DEF per level (+1 All Stats at Lv. 3+)', baseCost: 50, maxLevel: 5 },
+  { id: 'basement', name: 'Alchemist Cellar', desc: '+1 AGI, +2 Boss DMG & +1 MP clean day per level', baseCost: 45, maxLevel: 5 },
 ];
 
 export const HOME_FURNITURE: {
@@ -1086,6 +1084,8 @@ export const HOME_FURNITURE: {
   { id: 'star-telescope', name: 'Brass Astrolabe', room: 'library', cost: 85, perk: '+15% Quest XP' },
   { id: 'iron-dummy', name: 'Sparring Automaton', room: 'training', cost: 65, perk: '+3 Boss DMG per quest' },
   { id: 'moon-planter', name: 'Moonflower Planter', room: 'garden', cost: 50, perk: '+1 AGI permanently' },
+  { id: 'barrel-rack', name: 'Oak Reserve Barrels', room: 'basement', cost: 50, perk: '+2 Gold on Daily Board bonus' },
+  { id: 'alchemy-cauldron', name: 'Bubbling Alchemy Cauldron', room: 'basement', cost: 65, perk: '+3 MP restored on clean days' },
 ];
 
 export const HOME_TROPHIES: Record<string, { name: string; desc: string; color: string }> = {

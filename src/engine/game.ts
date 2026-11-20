@@ -147,7 +147,7 @@ function createWeeklyBossForWeek(weekKey: string, bossIndex = 0): WeeklyBossStat
 function defaultHomeState(): HomeState {
   return {
     houseName: 'Oakhearth Cottage',
-    rooms: { living: 1, library: 0, training: 0, garden: 0, trophy: 0 },
+    rooms: { living: 1, library: 0, training: 0, garden: 0, trophy: 0, basement: 0 },
     furniture: [],
     trophies: [],
   };
@@ -628,15 +628,16 @@ export function getHomeBonuses(s: HeroSave) {
       str: (rooms.training || 0) + trophyBonus,
       def: (rooms.trophy || 0) + trophyBonus,
       int: (furn.has('scholar-desk') ? 1 : 0) + trophyBonus,
-      agi: (furn.has('moon-planter') ? 1 : 0) + trophyBonus,
+      agi: (rooms.basement || 0) + (furn.has('moon-planter') ? 1 : 0) + trophyBonus,
     },
     bonusGoldPerQuest: Math.max(0, (rooms.living || 0) - 1) * 2,
     bonusXpPerQuest: (rooms.library || 0) * 2,
     questXpMult: 1 + (furn.has('star-telescope') ? 0.15 : 0),
     focusXpMult: 1 + (rooms.library || 0) * 0.1 + (furn.has('star-telescope') ? 0.1 : 0),
-    bonusBossDmg: (rooms.training || 0) * 2 + (furn.has('iron-dummy') ? 3 : 0),
+    bonusBossDmg: (rooms.training || 0) * 2 + (rooms.basement || 0) * 2 + (furn.has('iron-dummy') ? 3 : 0),
     cleanHealHp: (rooms.garden || 0) + (furn.has('oak-hearth') ? 1 : 0),
-    boardBonusGold: furn.has('woven-rug') ? 2 : 0,
+    cleanHealMp: (rooms.basement || 0) + (furn.has('alchemy-cauldron') ? 3 : 0),
+    boardBonusGold: (furn.has('woven-rug') ? 2 : 0) + (furn.has('barrel-rack') ? 2 : 0),
   };
 }
 
@@ -1945,7 +1946,7 @@ export function getOnboardingTasks(s: HeroSave): OnboardingTaskStatus[] {
     {
       id: 'buy-gear',
       title: 'Purchase a piece of equipment',
-      hint: 'Buy any gear in Realm → Market or Seasonal Shop',
+      hint: 'Buy any gear in Realm → Market',
       done: s.gearPurchasedCount > 0 || s.owned.length > 1,
     },
   ];
@@ -2192,7 +2193,7 @@ export function resolveDays(s: HeroSave, targetDay = today(), forceSingleDay = f
       addChallengeProgress(s, 'clean');
     }
 
-    // Home Herb Garden, Skill Tree Mindfulness, & active pet passive regen on clean days
+    // Home Herb Garden, Alchemist Cellar, Skill Tree Mindfulness, & active pet passive regen on clean days
     const totalCleanHeal = homeB.cleanHealHp + skillB.cleanHealHp + petPerk.cleanHealHp;
     if (missed.length === 0) {
       ensureDailyRecord(s, day).cleanDay = true;
@@ -2200,6 +2201,9 @@ export function resolveDays(s: HeroSave, targetDay = today(), forceSingleDay = f
         const beforeHp = s.hp;
         s.hp = Math.min(maxHp(s.level), s.hp + totalCleanHeal);
         totalHealed += s.hp - beforeHp;
+      }
+      if (homeB.cleanHealMp > 0) {
+        s.mp = Math.min(maxMp(s.level), s.mp + homeB.cleanHealMp);
       }
     }
 

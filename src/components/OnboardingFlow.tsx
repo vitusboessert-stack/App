@@ -135,48 +135,50 @@ export function OnboardingFlow({
         </span>
       </header>
 
-      <div className="mx-auto mb-8 grid max-w-3xl grid-cols-1 items-end gap-5 sm:grid-cols-[160px_1fr]">
-        <MerlinAvatar
-          speaking={!dialogDone}
-          classNameWrapper="mx-auto aspect-[3/4] w-36 rounded-2xl border border-[#4a4563] shadow-xl sm:mx-0"
-        />
-        <div className="flex min-h-[164px] flex-col justify-between rounded-2xl border border-[#6e5d46] bg-[#2a231c] p-5 shadow-xl">
-          <div>
-            <p className="text-xs font-bold tracking-wider text-[#e8b84b]">
-              Merlin · Keeper of Arcana
-            </p>
-            <p className="mt-2.5 text-base leading-relaxed text-[#fff7e7]">{typedText}</p>
-          </div>
-          <div className="mt-4 flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                setTypedText(DIALOGUES[step]);
-                setDialogDone(true);
-              }}
-              className={`text-xs font-bold text-[#d6c29d] underline-offset-4 hover:underline ${
-                dialogDone ? 'invisible' : ''
-              }`}
-            >
-              Skip dialogue
-            </button>
-            <button
-              type="button"
-              disabled={!canProceed}
-              onClick={() => {
-                if (step < 2) {
-                  setStep(step + 1);
-                } else {
-                  onComplete(heroName.trim() || 'Adventurer', avatar, selectedClass);
-                }
-              }}
-              className="min-h-[42px] rounded-xl bg-[#9b7bf0] px-5 py-2 text-sm font-bold text-[#14111c] transition-colors hover:bg-[#b094f7] disabled:cursor-not-allowed disabled:opacity-40 whitespace-nowrap"
-            >
-              {step === 2 ? 'Enter the Realm' : 'Continue'} ›
-            </button>
+      {step !== 1 && (
+        <div className="mx-auto mb-8 grid max-w-3xl grid-cols-1 items-end gap-5 sm:grid-cols-[160px_1fr]">
+          <MerlinAvatar
+            speaking={!dialogDone}
+            classNameWrapper="mx-auto aspect-[3/4] w-36 rounded-2xl border border-[#4a4563] shadow-xl sm:mx-0"
+          />
+          <div className="flex min-h-[164px] flex-col justify-between rounded-2xl border border-[#6e5d46] bg-[#2a231c] p-5 shadow-xl">
+            <div>
+              <p className="text-xs font-bold tracking-wider text-[#e8b84b]">
+                Merlin · Keeper of Arcana
+              </p>
+              <p className="mt-2.5 text-base leading-relaxed text-[#fff7e7]">{typedText}</p>
+            </div>
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setTypedText(DIALOGUES[step]);
+                  setDialogDone(true);
+                }}
+                className={`text-xs font-bold text-[#d6c29d] underline-offset-4 hover:underline ${
+                  dialogDone ? 'invisible' : ''
+                }`}
+              >
+                Skip dialogue
+              </button>
+              <button
+                type="button"
+                disabled={!canProceed}
+                onClick={() => {
+                  if (step < 2) {
+                    setStep(step + 1);
+                  } else {
+                    onComplete(heroName.trim() || 'Adventurer', avatar, selectedClass);
+                  }
+                }}
+                className="min-h-[42px] rounded-xl bg-[#9b7bf0] px-5 py-2 text-sm font-bold text-[#14111c] transition-colors hover:bg-[#b094f7] disabled:cursor-not-allowed disabled:opacity-40 whitespace-nowrap"
+              >
+                {step === 2 ? 'Enter the Realm' : 'Continue'} ›
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {step === 0 && (
         <div className="mx-auto max-w-xl rounded-2xl border border-[#343340] bg-[#222229] p-6">
@@ -200,7 +202,50 @@ export function OnboardingFlow({
       )}
 
       {step === 1 && (
-        <AvatarWorkshop avatar={avatar} className={selectedClass} onChange={setAvatar} />
+        <AvatarWorkshop
+          avatar={avatar}
+          className={selectedClass}
+          onChange={setAvatar}
+          merlinSection={
+            <div className="relative rounded-2xl border border-[#3a3548] bg-[#1b1922] p-4 shadow-xl">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <span className="inline-flex items-center gap-1.5 rounded bg-[#c96f0e] px-2.5 py-0.5 text-[11px] font-extrabold text-white">
+                  <span className="text-[#fde047]">◆</span>
+                  Merlin
+                  <span className="text-[#fde047]">◆</span>
+                </span>
+                <MerlinAvatar
+                  speaking={!dialogDone}
+                  includeBackground={false}
+                  classNameWrapper="-mt-8 h-12 w-10 shrink-0"
+                />
+              </div>
+              <p className="text-sm leading-relaxed text-[#ece9f5]">{typedText}</p>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTypedText(DIALOGUES[step]);
+                    setDialogDone(true);
+                  }}
+                  className={`text-xs font-bold text-[#b8abdb] underline-offset-4 hover:underline ${
+                    dialogDone ? 'invisible' : ''
+                  }`}
+                >
+                  Skip dialogue
+                </button>
+                <button
+                  type="button"
+                  disabled={!canProceed}
+                  onClick={() => setStep(2)}
+                  className="min-h-[38px] rounded-xl bg-[#9b7bf0] px-4 py-1.5 text-xs font-bold text-[#14111c] transition-colors hover:bg-[#b094f7] disabled:cursor-not-allowed disabled:opacity-40 whitespace-nowrap"
+                >
+                  Continue ›
+                </button>
+              </div>
+            </div>
+          }
+        />
       )}
 
       {step === 2 && (
